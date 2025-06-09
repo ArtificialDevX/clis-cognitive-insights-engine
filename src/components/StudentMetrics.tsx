@@ -149,15 +149,9 @@ const StudentMetrics = ({ predictions }: StudentMetricsProps) => {
                   />
                   <Bar 
                     dataKey="score" 
-                    fill={(entry) => getScoreColor(entry?.score || 0)}
+                    fill="#3b82f6"
                     radius={[4, 4, 0, 0]}
                   />
-                  <defs>
-                    <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#3b82f6" />
-                      <stop offset="100%" stopColor="#1d4ed8" />
-                    </linearGradient>
-                  </defs>
                 </BarChart>
               </ResponsiveContainer>
             </div>

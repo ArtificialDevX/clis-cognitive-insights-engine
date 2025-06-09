@@ -64,9 +64,9 @@ const PredictionHistory = ({ predictions }: PredictionHistoryProps) => {
     if (!prediction.g1 || !prediction.g2) return null;
     const trend = prediction.g2 - prediction.g1;
     
-    if (trend > 0.5) return <TrendingUp className="w-3 h-3 text-green-500" title="Improving" />;
-    if (trend < -0.5) return <TrendingDown className="w-3 h-3 text-red-500" title="Declining" />;
-    return <div className="w-3 h-3 bg-gray-400 rounded-full" title="Stable" />;
+    if (trend > 0.5) return <TrendingUp className="w-3 h-3 text-green-500" />;
+    if (trend < -0.5) return <TrendingDown className="w-3 h-3 text-red-500" />;
+    return <div className="w-3 h-3 bg-gray-400 rounded-full" />;
   };
 
   const sortedPredictions = [...predictions].sort((a, b) => 

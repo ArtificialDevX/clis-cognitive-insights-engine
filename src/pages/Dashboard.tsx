@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,6 +29,9 @@ interface Prediction {
   risk_level: string;
   intervention_summary: string;
   created_at: string;
+  g1: number;
+  g2: number;
+  model_version: string;
   students?: { name: string };
 }
 
