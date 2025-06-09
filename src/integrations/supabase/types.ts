@@ -9,7 +9,146 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          id: string
+          is_resolved: boolean | null
+          message: string
+          prediction_id: string | null
+          resolved_at: string | null
+          severity: string
+          student_id: string | null
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          id?: string
+          is_resolved?: boolean | null
+          message: string
+          prediction_id?: string | null
+          resolved_at?: string | null
+          severity: string
+          student_id?: string | null
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          id?: string
+          is_resolved?: boolean | null
+          message?: string
+          prediction_id?: string | null
+          resolved_at?: string | null
+          severity?: string
+          student_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_prediction_id_fkey"
+            columns: ["prediction_id"]
+            isOneToOne: false
+            referencedRelation: "predictions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      predictions: {
+        Row: {
+          absences: number
+          confidence_level: number | null
+          created_at: string
+          effort_score: number
+          emotional_sentiment: number
+          g1: number
+          g2: number
+          id: string
+          intervention_summary: string | null
+          model_version: string | null
+          participation_index: number
+          predicted_score: number
+          risk_level: string | null
+          shap_explanation: Json | null
+          student_id: string | null
+          studytime: number
+        }
+        Insert: {
+          absences: number
+          confidence_level?: number | null
+          created_at?: string
+          effort_score: number
+          emotional_sentiment: number
+          g1: number
+          g2: number
+          id?: string
+          intervention_summary?: string | null
+          model_version?: string | null
+          participation_index: number
+          predicted_score: number
+          risk_level?: string | null
+          shap_explanation?: Json | null
+          student_id?: string | null
+          studytime: number
+        }
+        Update: {
+          absences?: number
+          confidence_level?: number | null
+          created_at?: string
+          effort_score?: number
+          emotional_sentiment?: number
+          g1?: number
+          g2?: number
+          id?: string
+          intervention_summary?: string | null
+          model_version?: string | null
+          participation_index?: number
+          predicted_score?: number
+          risk_level?: string | null
+          shap_explanation?: Json | null
+          student_id?: string | null
+          studytime?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "predictions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
