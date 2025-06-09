@@ -2,8 +2,8 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 
 interface Prediction {
   id: string;
@@ -13,6 +13,7 @@ interface Prediction {
   created_at: string;
   g1: number;
   g2: number;
+  model_version: string;
   students?: { name: string };
 }
 
@@ -161,7 +162,7 @@ const StudentMetrics = ({ predictions }: StudentMetricsProps) => {
               <h4 className="font-semibold text-gray-800 flex items-center gap-2">
                 🎓 Recent Predictions & Trends
               </h4>
-              {predictions.slice(0, 6).map((prediction, index) => {
+              {predictions.slice(0, 6).map((prediction) => {
                 const trend = prediction.g2 - prediction.g1;
                 const isImproving = trend > 0.5;
                 const isDeclining = trend < -0.5;

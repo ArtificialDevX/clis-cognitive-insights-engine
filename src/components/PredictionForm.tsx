@@ -20,6 +20,17 @@ interface PredictionFormProps {
   onPredictionComplete: () => void;
 }
 
+interface PredictionResult {
+  predicted_score: number;
+  confidence_level: number;
+  risk_level: string;
+  intervention_summary: string;
+  shap_explanation?: {
+    features: Record<string, number>;
+    total_contribution: number;
+  };
+}
+
 const PredictionForm = ({ students, onPredictionComplete }: PredictionFormProps) => {
   const [selectedStudent, setSelectedStudent] = useState('');
   const [formData, setFormData] = useState({
@@ -32,7 +43,7 @@ const PredictionForm = ({ students, onPredictionComplete }: PredictionFormProps)
     participation_index: 8.2
   });
   const [loading, setLoading] = useState(false);
-  const [prediction, setPrediction] = useState<any>(null);
+  const [prediction, setPrediction] = useState<PredictionResult | null>(null);
   const { toast } = useToast();
 
   const handleInputChange = (field: string, value: number) => {
@@ -40,7 +51,7 @@ const PredictionForm = ({ students, onPredictionComplete }: PredictionFormProps)
   };
 
   // Enhanced ML prediction algorithm with more sophisticated scoring
-  const enhancedMLPrediction = (data: typeof formData) => {
+  const enhancedMLPrediction = (data: typeof formData): PredictionResult => {
     console.log('Running enhanced ML prediction with data:', data);
     
     // Advanced weighted scoring with non-linear components
@@ -121,7 +132,7 @@ const PredictionForm = ({ students, onPredictionComplete }: PredictionFormProps)
     };
   };
 
-  const generateAdvancedIntervention = (data: typeof formData, score: number, risk: string) => {
+  const generateAdvancedIntervention = (data: typeof formData, score: number, risk: string): string => {
     const interventions = [];
     const strengths = [];
     

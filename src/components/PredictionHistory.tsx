@@ -13,6 +13,7 @@ interface Prediction {
   g1: number;
   g2: number;
   model_version: string;
+  intervention_summary?: string;
   students?: { name: string };
 }
 
@@ -31,20 +32,24 @@ const PredictionHistory = ({ predictions }: PredictionHistoryProps) => {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffHours < 1) return 'Just now';
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffHours < 48) return 'Yesterday';
-    
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+      
+      if (diffHours < 1) return 'Just now';
+      if (diffHours < 24) return `${diffHours}h ago`;
+      if (diffHours < 48) return 'Yesterday';
+      
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return 'Unknown time';
+    }
   };
 
   const getScoreColor = (score: number) => {
@@ -136,7 +141,6 @@ const PredictionHistory = ({ predictions }: PredictionHistoryProps) => {
                   </div>
                 </div>
 
-                {/* Additional insights for enhanced predictions */}
                 {prediction.model_version?.includes('enhanced') && (
                   <div className="bg-purple-50/50 p-2 rounded text-xs">
                     <span className="text-purple-700 font-medium">
