@@ -1,9 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Brain, AlertTriangle, TrendingUp, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import PredictionForm from '@/components/PredictionForm';
 import StudentMetrics from '@/components/StudentMetrics';
 import AlertsPanel from '@/components/AlertsPanel';
 import PredictionHistory from '@/components/PredictionHistory';
@@ -159,7 +159,7 @@ const Dashboard = () => {
         </div>
       </div>
     );
-  }
+  };
 
   const highRiskStudents = predictions.filter(p => p.risk_level === 'high').length;
   const totalPredictions = predictions.length;
@@ -229,16 +229,11 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Main Dashboard Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Real Student Data Prediction Form */}
-          <PredictionForm 
-            students={students} 
-            onPredictionComplete={handleNewPrediction}
-          />
-
-          {/* Flexible Student Analytics Input */}
+        {/* Main Dashboard Grid - Only Student Analytics Form */}
+        <div className="grid grid-cols-1 gap-6">
+          {/* Enhanced Student Analytics with Real Database Integration */}
           <StudentAnalyticsForm 
+            students={students}
             onPredictionComplete={handleNewPrediction}
           />
         </div>
