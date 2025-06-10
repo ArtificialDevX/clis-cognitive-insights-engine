@@ -51,13 +51,6 @@ export type Database = {
             referencedRelation: "predictions"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "alerts_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
         ]
       }
       predictions: {
@@ -115,37 +108,116 @@ export type Database = {
           student_id?: string | null
           studytime?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "predictions_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
-      students: {
+      student: {
         Row: {
-          created_at: string
-          email: string | null
-          id: string
-          name: string
-          updated_at: string
+          absences: number | null
+          activities: string | null
+          address: string | null
+          age: number | null
+          Dalc: number | null
+          failures: string | null
+          famrel: number | null
+          famsize: string | null
+          famsup: string | null
+          Fedu: number | null
+          Fjob: string | null
+          freetime: number | null
+          G1: string | null
+          G2: number | null
+          G3: number | null
+          goout: number | null
+          guardian: string | null
+          health: number | null
+          higher: string | null
+          id: number
+          internet: string | null
+          Medu: number | null
+          Mjob: string | null
+          nursery: string | null
+          paid: string | null
+          Pstatus: string | null
+          reason: string | null
+          romantic: string | null
+          school: string | null
+          schoolsup: string | null
+          sex: string | null
+          studytime: number | null
+          traveltime: number | null
+          Walc: number | null
         }
         Insert: {
-          created_at?: string
-          email?: string | null
-          id?: string
-          name: string
-          updated_at?: string
+          absences?: number | null
+          activities?: string | null
+          address?: string | null
+          age?: number | null
+          Dalc?: number | null
+          failures?: string | null
+          famrel?: number | null
+          famsize?: string | null
+          famsup?: string | null
+          Fedu?: number | null
+          Fjob?: string | null
+          freetime?: number | null
+          G1?: string | null
+          G2?: number | null
+          G3?: number | null
+          goout?: number | null
+          guardian?: string | null
+          health?: number | null
+          higher?: string | null
+          id?: number
+          internet?: string | null
+          Medu?: number | null
+          Mjob?: string | null
+          nursery?: string | null
+          paid?: string | null
+          Pstatus?: string | null
+          reason?: string | null
+          romantic?: string | null
+          school?: string | null
+          schoolsup?: string | null
+          sex?: string | null
+          studytime?: number | null
+          traveltime?: number | null
+          Walc?: number | null
         }
         Update: {
-          created_at?: string
-          email?: string | null
-          id?: string
-          name?: string
-          updated_at?: string
+          absences?: number | null
+          activities?: string | null
+          address?: string | null
+          age?: number | null
+          Dalc?: number | null
+          failures?: string | null
+          famrel?: number | null
+          famsize?: string | null
+          famsup?: string | null
+          Fedu?: number | null
+          Fjob?: string | null
+          freetime?: number | null
+          G1?: string | null
+          G2?: number | null
+          G3?: number | null
+          goout?: number | null
+          guardian?: string | null
+          health?: number | null
+          higher?: string | null
+          id?: number
+          internet?: string | null
+          Medu?: number | null
+          Mjob?: string | null
+          nursery?: string | null
+          paid?: string | null
+          Pstatus?: string | null
+          reason?: string | null
+          romantic?: string | null
+          school?: string | null
+          schoolsup?: string | null
+          sex?: string | null
+          studytime?: number | null
+          traveltime?: number | null
+          Walc?: number | null
         }
         Relationships: []
       }

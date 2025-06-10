@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,9 +15,23 @@ import AlertsPanel from '@/components/AlertsPanel';
 import PredictionHistory from '@/components/PredictionHistory';
 
 interface Student {
-  id: string;
-  name: string;
-  email: string;
+  id: number;
+  age?: number;
+  sex?: string;
+  studytime?: number;
+  absences?: number;
+  G1?: string;
+  G2?: number;
+  G3?: number;
+  school?: string;
+  Fedu?: number;
+  Medu?: number;
+  famrel?: number;
+  freetime?: number;
+  goout?: number;
+  Dalc?: number;
+  Walc?: number;
+  health?: number;
 }
 
 interface Prediction {
@@ -55,39 +68,54 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchData();
+    
+    // Set up real-time subscription for student table changes
+    const studentChannel = supabase
+      .channel('student-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'student' },
+        (payload) => {
+          console.log('Student data changed:', payload);
+          fetchData(); // Refresh data when student table changes
+          toast({
+            title: "Data Updated",
+            description: "Student data has been updated in real-time",
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(studentChannel);
+    };
   }, []);
 
   const fetchData = async () => {
     try {
       setLoading(true);
       
-      // Fetch students
+      // Fetch students from the main student table
       const { data: studentsData, error: studentsError } = await supabase
-        .from('students')
+        .from('student')
         .select('*')
-        .order('name');
+        .order('id');
 
       if (studentsError) throw studentsError;
 
-      // Fetch recent predictions with student names
+      // Fetch recent predictions (keeping the existing predictions table structure)
       const { data: predictionsData, error: predictionsError } = await supabase
         .from('predictions')
-        .select(`
-          *,
-          students (name)
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(10);
 
       if (predictionsError) throw predictionsError;
 
-      // Fetch unresolved alerts with student names
+      // Fetch unresolved alerts
       const { data: alertsData, error: alertsError } = await supabase
         .from('alerts')
-        .select(`
-          *,
-          students (name)
-        `)
+        .select('*')
         .eq('is_resolved', false)
         .order('created_at', { ascending: false });
 
@@ -147,7 +175,7 @@ const Dashboard = () => {
           </div>
           <p className="text-xl text-gray-600">Cognitive Learning Intelligence System</p>
           <p className="text-sm text-gray-500 mt-2">
-            AI-Powered Student Performance Prediction & Intervention Platform
+            AI-Powered Student Performance Prediction & Intervention Platform - Connected to Real Student Data
           </p>
         </div>
 
@@ -217,35 +245,35 @@ const Dashboard = () => {
         {/* Integration Info */}
         <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0">
           <CardHeader>
-            <CardTitle className="text-white">🔗 ML Model Integration</CardTitle>
+            <CardTitle className="text-white">🔗 ML Model Integration - Connected to Real Data</CardTitle>
             <CardDescription className="text-blue-100">
-              Connect your Colab notebook: https://colab.research.google.com/drive/1pd033r17nGNp_cJb9OCiC_fzzDCELiP2
+              Now using actual student data from database: https://colab.research.google.com/drive/1H8DreCEjx53QLB-qruN_xiYIrSpRDSGW
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div>
-                <strong>Features:</strong>
+                <strong>Real Student Data:</strong>
                 <ul className="mt-1 space-y-1 text-blue-100">
-                  <li>• Study Time</li>
-                  <li>• Previous Grades (G1, G2)</li>
-                  <li>• Absences</li>
+                  <li>• Academic Performance (G1, G2, G3)</li>
+                  <li>• Study Time & Absences</li>
+                  <li>• Demographics & Family Info</li>
                 </ul>
               </div>
               <div>
                 <strong>AI Components:</strong>
                 <ul className="mt-1 space-y-1 text-blue-100">
-                  <li>• Neural Network (MLPRegressor)</li>
+                  <li>• Enhanced Neural Network</li>
                   <li>• SHAP + LIME Explainability</li>
-                  <li>• LangChain T5 Summarizer</li>
+                  <li>• Real-time Data Updates</li>
                 </ul>
               </div>
               <div>
                 <strong>Output:</strong>
                 <ul className="mt-1 space-y-1 text-blue-100">
-                  <li>• Performance Score</li>
+                  <li>• Performance Score Prediction</li>
                   <li>• Risk Assessment</li>
-                  <li>• Intervention Summary</li>
+                  <li>• Personalized Interventions</li>
                 </ul>
               </div>
             </div>
