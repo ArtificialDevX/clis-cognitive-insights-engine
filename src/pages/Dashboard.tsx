@@ -1,18 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Brain, AlertTriangle, TrendingUp, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import PredictionForm from '@/components/PredictionForm';
 import StudentMetrics from '@/components/StudentMetrics';
 import AlertsPanel from '@/components/AlertsPanel';
 import PredictionHistory from '@/components/PredictionHistory';
+import StudentAnalyticsForm from '@/components/StudentAnalyticsForm';
 
 interface Student {
   id: number;
@@ -79,8 +74,8 @@ const Dashboard = () => {
           console.log('Student data changed:', payload);
           fetchData(); // Refresh data when student table changes
           toast({
-            title: "Data Updated",
-            description: "Student data has been updated in real-time",
+            title: "Real Data Updated",
+            description: "Student database has been updated in real-time",
           });
         }
       )
@@ -95,15 +90,20 @@ const Dashboard = () => {
     try {
       setLoading(true);
       
-      // Fetch students from the main student table
+      // Fetch students from the actual student table with all their data
       const { data: studentsData, error: studentsError } = await supabase
         .from('student')
         .select('*')
         .order('id');
 
-      if (studentsError) throw studentsError;
+      if (studentsError) {
+        console.error('Students fetch error:', studentsError);
+        throw studentsError;
+      }
 
-      // Fetch recent predictions (keeping the existing predictions table structure)
+      console.log('Fetched real student data:', studentsData);
+
+      // Fetch recent predictions
       const { data: predictionsData, error: predictionsError } = await supabase
         .from('predictions')
         .select('*')
@@ -124,6 +124,12 @@ const Dashboard = () => {
       setStudents(studentsData || []);
       setPredictions(predictionsData || []);
       setAlerts(alertsData || []);
+      
+      console.log('Dashboard data loaded:', {
+        students: studentsData?.length || 0,
+        predictions: predictionsData?.length || 0,
+        alerts: alertsData?.length || 0
+      });
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
@@ -175,7 +181,7 @@ const Dashboard = () => {
           </div>
           <p className="text-xl text-gray-600">Cognitive Learning Intelligence System</p>
           <p className="text-sm text-gray-500 mt-2">
-            AI-Powered Student Performance Prediction & Intervention Platform - Connected to Real Student Data
+            AI-Powered Student Performance Prediction & Intervention Platform - Using Real Student Database
           </p>
         </div>
 
@@ -183,11 +189,12 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+              <CardTitle className="text-sm font-medium">Real Students</CardTitle>
               <Users className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">{students.length}</div>
+              <p className="text-xs text-gray-500">From actual database</p>
             </CardContent>
           </Card>
 
@@ -224,20 +231,27 @@ const Dashboard = () => {
 
         {/* Main Dashboard Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Prediction Form */}
+          {/* Real Student Data Prediction Form */}
           <PredictionForm 
             students={students} 
             onPredictionComplete={handleNewPrediction}
           />
 
-          {/* Student Metrics */}
-          <StudentMetrics predictions={predictions} />
+          {/* Flexible Student Analytics Input */}
+          <StudentAnalyticsForm 
+            onPredictionComplete={handleNewPrediction}
+          />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Student Metrics */}
+          <StudentMetrics predictions={predictions} />
+
           {/* Alerts Panel */}
           <AlertsPanel alerts={alerts} onAlertsUpdate={fetchData} />
+        </div>
 
+        <div className="grid grid-cols-1 gap-6">
           {/* Prediction History */}
           <PredictionHistory predictions={predictions} />
         </div>
@@ -245,35 +259,38 @@ const Dashboard = () => {
         {/* Integration Info */}
         <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0">
           <CardHeader>
-            <CardTitle className="text-white">🔗 ML Model Integration - Connected to Real Data</CardTitle>
+            <CardTitle className="text-white">🔗 Real Student Data Integration Active</CardTitle>
             <CardDescription className="text-blue-100">
-              Now using actual student data from database: https://colab.research.google.com/drive/1H8DreCEjx53QLB-qruN_xiYIrSpRDSGW
+              Connected to actual student database with {students.length} real student records
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div>
-                <strong>Real Student Data:</strong>
+                <strong>Real Database Fields:</strong>
                 <ul className="mt-1 space-y-1 text-blue-100">
-                  <li>• Academic Performance (G1, G2, G3)</li>
-                  <li>• Study Time & Absences</li>
-                  <li>• Demographics & Family Info</li>
+                  <li>• Academic: G1, G2, G3 scores</li>
+                  <li>• Behavior: studytime, absences</li>
+                  <li>• Demographics: age, sex, address</li>
+                  <li>• Family: Medu, Fedu, famrel</li>
                 </ul>
               </div>
               <div>
-                <strong>AI Components:</strong>
+                <strong>ML Analytics:</strong>
                 <ul className="mt-1 space-y-1 text-blue-100">
-                  <li>• Enhanced Neural Network</li>
-                  <li>• SHAP + LIME Explainability</li>
-                  <li>• Real-time Data Updates</li>
+                  <li>• Real-time data updates</li>
+                  <li>• Flexible input form</li>
+                  <li>• Any student analytics</li>
+                  <li>• Custom ML predictions</li>
                 </ul>
               </div>
               <div>
-                <strong>Output:</strong>
+                <strong>Outputs:</strong>
                 <ul className="mt-1 space-y-1 text-blue-100">
-                  <li>• Performance Score Prediction</li>
-                  <li>• Risk Assessment</li>
-                  <li>• Personalized Interventions</li>
+                  <li>• Performance predictions</li>
+                  <li>• Risk assessments</li>
+                  <li>• Intervention plans</li>
+                  <li>• Real-time alerts</li>
                 </ul>
               </div>
             </div>
