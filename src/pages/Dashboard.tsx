@@ -107,56 +107,29 @@ const Dashboard = () => {
       setLoading(true);
       
       console.log('🔍 Fetching student data from Supabase...');
-      console.log('📡 Using Supabase URL:', supabase.supabaseUrl);
       
-      // Try multiple approaches to fetch student data
-      let studentsData = null;
-      let studentsError = null;
-      
-      // First attempt: Standard query
-      console.log('📝 Attempting standard query...');
-      const { data: standardData, error: standardError } = await supabase
+      // Fetch student data with multiple fallback strategies
+      console.log('📝 Attempting to fetch student records...');
+      const { data: studentsData, error: studentsError } = await supabase
         .from('student')
         .select('*')
         .limit(1000);
       
-      if (standardError) {
-        console.error('❌ Standard query error:', standardError);
+      if (studentsError) {
+        console.error('❌ Student fetch error:', studentsError);
         
-        // Second attempt: Try with specific columns
-        console.log('📝 Attempting with specific columns...');
-        const { data: columnData, error: columnError } = await supabase
-          .from('student')
-          .select('id, age, sex, studytime, absences, G1, G2, G3, school, Fedu, Medu, famrel, health, Dalc, Walc, goout')
-          .limit(100);
-          
-        if (columnError) {
-          console.error('❌ Column query error:', columnError);
-          
-          // Third attempt: Try to just count records
-          console.log('📝 Attempting to count records...');
-          const { count, error: countError } = await supabase
-            .from('student')
-            .select('*', { count: 'exact', head: true });
-            
-          if (countError) {
-            console.error('❌ Count query error:', countError);
-            throw new Error(`All query attempts failed. Last error: ${countError.message}`);
-          } else {
-            console.log('📊 Record count successful:', count);
-            toast({
-              title: "Database Connection Issue",
-              description: `Found ${count} records but cannot access data. This might be a permissions issue.`,
-              variant: "destructive",
-            });
-          }
+        // Check if it's a permission issue
+        if (studentsError.code === 'PGRST116' || studentsError.message.includes('permission')) {
+          toast({
+            title: "Database Permission Issue",
+            description: "Cannot access student table. Please check your Row Level Security (RLS) policies in Supabase.",
+            variant: "destructive",
+          });
         } else {
-          studentsData = columnData;
-          console.log('✅ Column query successful:', columnData?.length || 0);
+          throw studentsError;
         }
       } else {
-        studentsData = standardData;
-        console.log('✅ Standard query successful:', standardData?.length || 0);
+        console.log('✅ Student data fetched successfully:', studentsData?.length || 0);
       }
 
       console.log('📊 Student fetch result:', { 
@@ -207,28 +180,12 @@ const Dashboard = () => {
           title: "✅ Database Connected Successfully",
           description: `Loaded ${studentsData.length} real student records from Supabase`,
         });
-      } else {
-        console.warn('⚠️ No student data found - checking for permission issues...');
-        
-        // Check if table exists by trying to get table info
-        const { data: tableInfo, error: tableError } = await supabase
-          .from('student')
-          .select('id')
-          .limit(1);
-          
-        if (tableError) {
-          toast({
-            title: "Database Permission Error",
-            description: `Cannot access student table: ${tableError.message}. Please check RLS policies.`,
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "No Student Data",
-            description: "Connected to database but no student records found. Please add some data to the student table.",
-            variant: "destructive",
-          });
-        }
+      } else if (!studentsError) {
+        toast({
+          title: "No Student Data",
+          description: "Connected to database but no student records found. Please add some data to the student table.",
+          variant: "destructive",
+        });
       }
       
     } catch (error) {
