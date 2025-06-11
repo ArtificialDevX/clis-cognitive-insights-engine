@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -106,17 +107,17 @@ const Dashboard = () => {
     try {
       setLoading(true);
       
-      console.log('🔍 Fetching student data from Supabase...');
+      console.log('Fetching student data from Supabase...');
       
       // Fetch student data with multiple fallback strategies
-      console.log('📝 Attempting to fetch student records...');
+      console.log('Attempting to fetch student records...');
       const { data: studentsData, error: studentsError } = await supabase
         .from('student')
         .select('*')
         .limit(1000);
       
       if (studentsError) {
-        console.error('❌ Student fetch error:', studentsError);
+        console.error('Student fetch error:', studentsError);
         
         // Check if it's a permission issue
         if (studentsError.code === 'PGRST116' || studentsError.message.includes('permission')) {
@@ -129,10 +130,10 @@ const Dashboard = () => {
           throw studentsError;
         }
       } else {
-        console.log('✅ Student data fetched successfully:', studentsData?.length || 0);
+        console.log('Student data fetched successfully:', studentsData?.length || 0);
       }
 
-      console.log('📊 Student fetch result:', { 
+      console.log('Student fetch result:', { 
         data: studentsData, 
         dataLength: studentsData?.length 
       });
@@ -147,9 +148,9 @@ const Dashboard = () => {
         .limit(10);
 
       if (predictionsError) {
-        console.error('❌ Predictions fetch error:', predictionsError);
+        console.error('Predictions fetch error:', predictionsError);
       } else {
-        console.log('✅ Predictions loaded:', predictionsData?.length || 0);
+        console.log('Predictions loaded:', predictionsData?.length || 0);
       }
 
       // Fetch unresolved alerts
@@ -160,15 +161,15 @@ const Dashboard = () => {
         .order('created_at', { ascending: false });
 
       if (alertsError) {
-        console.error('❌ Alerts fetch error:', alertsError);
+        console.error('Alerts fetch error:', alertsError);
       } else {
-        console.log('✅ Alerts loaded:', alertsData?.length || 0);
+        console.log('Alerts loaded:', alertsData?.length || 0);
       }
 
       setPredictions(predictionsData || []);
       setAlerts(alertsData || []);
       
-      console.log('🎯 Dashboard data summary:', {
+      console.log('Dashboard data summary:', {
         students: studentsData?.length || 0,
         predictions: predictionsData?.length || 0,
         alerts: alertsData?.length || 0
@@ -177,7 +178,7 @@ const Dashboard = () => {
       // Show success message if we have student data
       if (studentsData && studentsData.length > 0) {
         toast({
-          title: "✅ Database Connected Successfully",
+          title: "Database Connected Successfully",
           description: `Loaded ${studentsData.length} real student records from Supabase`,
         });
       } else if (!studentsError) {
@@ -189,7 +190,7 @@ const Dashboard = () => {
       }
       
     } catch (error) {
-      console.error('💥 Error fetching data:', error);
+      console.error('Error fetching data:', error);
       toast({
         title: "Database Connection Error",
         description: `Failed to fetch data: ${error.message}`,
@@ -210,11 +211,11 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
-          <Brain className="w-12 h-12 mx-auto mb-4 text-blue-600 animate-pulse" />
-          <p className="text-lg text-gray-600">Loading CLIS Dashboard...</p>
-          <p className="text-sm text-gray-500 mt-2">Connecting to Supabase database...</p>
+          <Brain className="w-12 h-12 mx-auto mb-4 text-slate-600 animate-pulse" />
+          <p className="text-lg text-slate-600">Loading CLIS Dashboard...</p>
+          <p className="text-sm text-slate-500 mt-2">Connecting to Supabase database...</p>
         </div>
       </div>
     );
@@ -228,64 +229,64 @@ const Dashboard = () => {
     : '0';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="min-h-screen bg-slate-50 p-4">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <Brain className="w-12 h-12 text-blue-600 mr-3" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <Brain className="w-12 h-12 text-slate-600 mr-3" />
+            <h1 className="text-4xl font-bold text-slate-800">
               CLIS Dashboard
             </h1>
           </div>
-          <p className="text-xl text-gray-600">Cognitive Learning Intelligence System</p>
-          <p className="text-sm text-gray-500 mt-2">
+          <p className="text-xl text-slate-600">Cognitive Learning Intelligence System</p>
+          <p className="text-sm text-slate-500 mt-2">
             AI-Powered Student Performance Prediction & Intervention Platform
           </p>
         </div>
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-white border border-slate-200 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Connected Students</CardTitle>
-              <Users className="h-4 w-4 text-blue-600" />
+              <CardTitle className="text-sm font-medium text-slate-700">Connected Students</CardTitle>
+              <Users className="h-4 w-4 text-slate-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{students.length}</div>
-              <p className="text-xs text-gray-500">
-                {students.length > 0 ? "✅ Database Connected" : "⚠️ No Data Found"}
+              <div className="text-2xl font-bold text-slate-700">{students.length}</div>
+              <p className="text-xs text-slate-500">
+                {students.length > 0 ? "Database Connected" : "No Data Found"}
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-white border border-slate-200 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">High Risk Students</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-red-500" />
+              <CardTitle className="text-sm font-medium text-slate-700">High Risk Students</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-rose-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-500">{highRiskStudents}</div>
+              <div className="text-2xl font-bold text-rose-500">{highRiskStudents}</div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-white border border-slate-200 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Alerts</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-orange-500" />
+              <CardTitle className="text-sm font-medium text-slate-700">Active Alerts</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-amber-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-500">{activeAlerts}</div>
+              <div className="text-2xl font-bold text-amber-500">{activeAlerts}</div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-white border border-slate-200 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg Confidence</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-500" />
+              <CardTitle className="text-sm font-medium text-slate-700">Avg Confidence</CardTitle>
+              <TrendingUp className="h-4 w-4 text-emerald-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-500">{avgConfidence}%</div>
+              <div className="text-2xl font-bold text-emerald-500">{avgConfidence}%</div>
             </CardContent>
           </Card>
         </div>
@@ -312,12 +313,12 @@ const Dashboard = () => {
         </div>
 
         {/* Database Connection Status */}
-        <Card className={`border-0 ${students.length > 0 ? 'bg-gradient-to-r from-green-600 to-blue-600 text-white' : 'bg-gradient-to-r from-red-600 to-orange-600 text-white'}`}>
+        <Card className={`border-0 ${students.length > 0 ? 'bg-emerald-50 border border-emerald-200' : 'bg-rose-50 border border-rose-200'}`}>
           <CardHeader>
-            <CardTitle className="text-white">
-              {students.length > 0 ? '✅ Supabase Database Connected' : '⚠️ Database Connection Issue'}
+            <CardTitle className={students.length > 0 ? 'text-emerald-800' : 'text-rose-800'}>
+              {students.length > 0 ? 'Supabase Database Connected' : 'Database Connection Issue'}
             </CardTitle>
-            <CardDescription className={students.length > 0 ? 'text-green-100' : 'text-red-100'}>
+            <CardDescription className={students.length > 0 ? 'text-emerald-700' : 'text-rose-700'}>
               {students.length > 0 
                 ? `Successfully connected to your Supabase database with ${students.length} student records`
                 : 'Unable to fetch student data from your Supabase database - this might be a permissions issue'
@@ -328,8 +329,8 @@ const Dashboard = () => {
             {students.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div>
-                  <strong>✅ Database Status:</strong>
-                  <ul className="mt-1 space-y-1 text-blue-100">
+                  <strong className="text-emerald-800">Database Status:</strong>
+                  <ul className="mt-1 space-y-1 text-emerald-700">
                     <li>• Connected to Supabase</li>
                     <li>• Real-time updates active</li>
                     <li>• {students.length} student records loaded</li>
@@ -337,8 +338,8 @@ const Dashboard = () => {
                   </ul>
                 </div>
                 <div>
-                  <strong>📊 Available Data:</strong>
-                  <ul className="mt-1 space-y-1 text-blue-100">
+                  <strong className="text-emerald-800">Available Data:</strong>
+                  <ul className="mt-1 space-y-1 text-emerald-700">
                     <li>• Academic scores (G1, G2, G3)</li>
                     <li>• Demographics & behavior</li>
                     <li>• Family background</li>
@@ -346,8 +347,8 @@ const Dashboard = () => {
                   </ul>
                 </div>
                 <div>
-                  <strong>🚀 AI Features:</strong>
-                  <ul className="mt-1 space-y-1 text-blue-100">
+                  <strong className="text-emerald-800">AI Features:</strong>
+                  <ul className="mt-1 space-y-1 text-emerald-700">
                     <li>• Performance predictions</li>
                     <li>• Risk assessments</li>
                     <li>• Intervention recommendations</li>
@@ -357,16 +358,16 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="text-center py-4">
-                <p className="text-red-100 mb-2">
+                <p className="text-rose-700 mb-2">
                   Cannot access student data. This could be due to:
                 </p>
-                <ul className="text-sm text-red-200 text-left max-w-md mx-auto">
+                <ul className="text-sm text-rose-600 text-left max-w-md mx-auto">
                   <li>• Row Level Security (RLS) policies blocking access</li>
                   <li>• No SELECT permissions for anonymous users</li>
                   <li>• Empty student table</li>
                   <li>• Network connection issues</li>
                 </ul>
-                <p className="text-red-100 mt-4 text-sm">
+                <p className="text-rose-700 mt-4 text-sm">
                   Check your Supabase project settings and RLS policies.
                 </p>
               </div>
