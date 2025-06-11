@@ -3,86 +3,86 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Professional pastel color design system - soft and easy on the eyes */
+/* Professional high-contrast design system with excellent readability */
 
 @layer base {
   :root {
-    --background: 248 250 252; /* slate-50 */
-    --foreground: 51 65 85; /* slate-700 */
+    --background: 255 255 255; /* pure white */
+    --foreground: 15 23 42; /* slate-900 - very dark text */
 
     --card: 255 255 255; /* white */
-    --card-foreground: 51 65 85; /* slate-700 */
+    --card-foreground: 15 23 42; /* slate-900 */
 
     --popover: 255 255 255;
-    --popover-foreground: 51 65 85;
+    --popover-foreground: 15 23 42;
 
-    --primary: 100 116 139; /* slate-500 */
-    --primary-foreground: 248 250 252; /* slate-50 */
+    --primary: 51 65 85; /* slate-700 */
+    --primary-foreground: 255 255 255; /* white */
 
-    --secondary: 241 245 249; /* slate-100 */
-    --secondary-foreground: 71 85 105; /* slate-600 */
+    --secondary: 248 250 252; /* slate-50 */
+    --secondary-foreground: 15 23 42; /* slate-900 */
 
     --muted: 241 245 249; /* slate-100 */
-    --muted-foreground: 100 116 139; /* slate-500 */
+    --muted-foreground: 71 85 105; /* slate-600 */
 
     --accent: 226 232 240; /* slate-200 */
-    --accent-foreground: 51 65 85; /* slate-700 */
+    --accent-foreground: 15 23 42; /* slate-900 */
 
-    --destructive: 244 63 94; /* rose-500 */
-    --destructive-foreground: 255 241 242; /* rose-50 */
+    --destructive: 220 38 38; /* red-600 */
+    --destructive-foreground: 255 255 255; /* white */
 
-    --border: 226 232 240; /* slate-200 */
-    --input: 226 232 240; /* slate-200 */
+    --border: 203 213 225; /* slate-300 */
+    --input: 203 213 225; /* slate-300 */
     --ring: 148 163 184; /* slate-400 */
 
     --radius: 0.5rem;
 
     --sidebar-background: 248 250 252; /* slate-50 */
     --sidebar-foreground: 71 85 105; /* slate-600 */
-    --sidebar-primary: 100 116 139; /* slate-500 */
-    --sidebar-primary-foreground: 248 250 252; /* slate-50 */
+    --sidebar-primary: 51 65 85; /* slate-700 */
+    --sidebar-primary-foreground: 255 255 255; /* white */
     --sidebar-accent: 241 245 249; /* slate-100 */
-    --sidebar-accent-foreground: 51 65 85; /* slate-700 */
-    --sidebar-border: 226 232 240; /* slate-200 */
+    --sidebar-accent-foreground: 15 23 42; /* slate-900 */
+    --sidebar-border: 203 213 225; /* slate-300 */
     --sidebar-ring: 148 163 184; /* slate-400 */
   }
 
   .dark {
-    --background: 30 41 59; /* slate-800 */
-    --foreground: 226 232 240; /* slate-200 */
+    --background: 15 23 42; /* slate-900 */
+    --foreground: 248 250 252; /* slate-50 */
 
-    --card: 51 65 85; /* slate-700 */
-    --card-foreground: 226 232 240; /* slate-200 */
+    --card: 30 41 59; /* slate-800 */
+    --card-foreground: 248 250 252; /* slate-50 */
 
-    --popover: 51 65 85;
-    --popover-foreground: 226 232 240;
+    --popover: 30 41 59;
+    --popover-foreground: 248 250 252;
 
     --primary: 148 163 184; /* slate-400 */
-    --primary-foreground: 30 41 59; /* slate-800 */
+    --primary-foreground: 15 23 42; /* slate-900 */
 
-    --secondary: 71 85 105; /* slate-600 */
-    --secondary-foreground: 226 232 240; /* slate-200 */
+    --secondary: 51 65 85; /* slate-700 */
+    --secondary-foreground: 248 250 252; /* slate-50 */
 
-    --muted: 71 85 105; /* slate-600 */
+    --muted: 51 65 85; /* slate-700 */
     --muted-foreground: 148 163 184; /* slate-400 */
 
-    --accent: 100 116 139; /* slate-500 */
-    --accent-foreground: 226 232 240; /* slate-200 */
+    --accent: 71 85 105; /* slate-600 */
+    --accent-foreground: 248 250 252; /* slate-50 */
 
-    --destructive: 225 29 72; /* rose-700 */
-    --destructive-foreground: 255 241 242; /* rose-50 */
+    --destructive: 220 38 38; /* red-600 */
+    --destructive-foreground: 248 250 252; /* slate-50 */
 
-    --border: 100 116 139; /* slate-500 */
-    --input: 100 116 139; /* slate-500 */
+    --border: 71 85 105; /* slate-600 */
+    --input: 71 85 105; /* slate-600 */
     --ring: 148 163 184; /* slate-400 */
 
-    --sidebar-background: 30 41 59; /* slate-800 */
+    --sidebar-background: 15 23 42; /* slate-900 */
     --sidebar-foreground: 148 163 184; /* slate-400 */
-    --sidebar-primary: 100 116 139; /* slate-500 */
+    --sidebar-primary: 71 85 105; /* slate-600 */
     --sidebar-primary-foreground: 248 250 252; /* slate-50 */
-    --sidebar-accent: 71 85 105; /* slate-600 */
-    --sidebar-accent-foreground: 226 232 240; /* slate-200 */
-    --sidebar-border: 100 116 139; /* slate-500 */
+    --sidebar-accent: 51 65 85; /* slate-700 */
+    --sidebar-accent-foreground: 248 250 252; /* slate-50 */
+    --sidebar-border: 71 85 105; /* slate-600 */
     --sidebar-ring: 148 163 184; /* slate-400 */
   }
 }
