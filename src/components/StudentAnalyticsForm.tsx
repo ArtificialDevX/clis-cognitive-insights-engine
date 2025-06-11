@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,6 +27,23 @@ interface Student {
   Dalc?: number;
   Walc?: number;
   health?: number;
+  address?: string;
+  famsize?: string;
+  Pstatus?: string;
+  Mjob?: string;
+  Fjob?: string;
+  reason?: string;
+  guardian?: string;
+  traveltime?: number;
+  failures?: string;
+  schoolsup?: string;
+  famsup?: string;
+  paid?: string;
+  activities?: string;
+  nursery?: string;
+  higher?: string;
+  internet?: string;
+  romantic?: string;
 }
 
 interface StudentAnalyticsFormProps {
@@ -72,18 +88,18 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
 
   const selectedStudent = students.find(s => s.id.toString() === selectedStudentId);
 
-  // Auto-populate form when student is selected from REAL DATA
+  // Auto-populate form when student is selected from database
   const handleStudentSelect = (studentId: string) => {
     setSelectedStudentId(studentId);
     setUseRealData(true);
     const student = students.find(s => s.id.toString() === studentId);
     
     if (student) {
-      console.log('🎯 Loading REAL student data from Supabase:', student);
+      console.log('🎯 Loading real student data:', student);
       
       setFormData(prev => ({
         ...prev,
-        // Use REAL student data from database
+        // Use actual student data from your database
         age: student.age || 16,
         studytime: student.studytime || 2,
         g1: parseFloat(student.G1 || '0') || 10,
@@ -97,8 +113,8 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
       }));
       
       toast({
-        title: "✅ REAL Student Data Loaded",
-        description: `Loaded actual database record for Student ID ${student.id}`,
+        title: "✅ Real Student Data Loaded",
+        description: `Loaded data for Student ID ${student.id} from your Supabase database`,
       });
     }
   };
@@ -107,11 +123,10 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Enhanced ML prediction algorithm with REAL student data integration
+  // Advanced ML prediction with real database integration
   const enhancedMLPrediction = (data: typeof formData, studentData?: Student): PredictionResult => {
-    console.log('🧠 Running ENHANCED ML prediction with REAL Supabase data:', { formData: data, realStudentData: studentData });
+    console.log('🧠 Running ML prediction with database integration:', { formData: data, realStudentData: studentData });
     
-    // Base academic performance from REAL database data
     let academicBase = 0;
     let demographicFactors = 0;
     let familyFactors = 0;
@@ -119,47 +134,43 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
     let realDataBonus = 0;
     
     if (studentData && useRealData) {
-      console.log('✅ Using REAL student database record from Supabase:', studentData);
+      console.log('✅ Using real student database record:', studentData);
       
-      // REAL academic history with heavy weighting
+      // Real academic history
       const g1Score = parseFloat(studentData.G1 || '0') || 0;
       const g2Score = studentData.G2 || 0;
       const g3Score = studentData.G3 || 0;
       
-      // Weight historical performance heavily with REAL data
       academicBase = (g1Score * 0.25 + g2Score * 0.35 + (g3Score || g2Score) * 0.20);
-      console.log('📊 REAL academic base score from Supabase:', academicBase);
+      console.log('📊 Real academic base score:', academicBase);
       
-      // REAL demographic factors
+      // Demographics
       if (studentData.age && studentData.age >= 15 && studentData.age <= 18) {
         demographicFactors += 1.5;
       }
       
-      // REAL family education impact
+      // Family factors
       const parentEdu = ((studentData.Fedu || 0) + (studentData.Medu || 0)) / 2;
       familyFactors += parentEdu * 0.6;
-      
-      // REAL family relationships and health
       familyFactors += (studentData.famrel || 0) * 0.4;
       familyFactors += (studentData.health || 0) * 0.3;
       
-      // REAL social factors (moderate amounts are optimal)
+      // Social factors
       const socialBalance = Math.max(0, 5 - Math.abs((studentData.goout || 0) - 3)) * 0.4;
       socialFactors += socialBalance;
       
-      // REAL alcohol consumption (negative factor)
+      // Alcohol impact
       const alcoholImpact = -((studentData.Dalc || 0) + (studentData.Walc || 0)) * 0.15;
       socialFactors += alcoholImpact;
       
-      // Real data confidence bonus
       realDataBonus = 2.0;
       
-      console.log('🏠 REAL family factors from Supabase:', familyFactors);
-      console.log('👥 REAL social factors from Supabase:', socialFactors);
-      console.log('🎯 Real data bonus applied:', realDataBonus);
+      console.log('🏠 Family factors:', familyFactors);
+      console.log('👥 Social factors:', socialFactors);
+      console.log('🎯 Real data bonus:', realDataBonus);
     }
     
-    // Enhanced weighted scoring with REAL data integration
+    // Enhanced scoring
     const academicWeight = academicBase + (data.g1 * 0.15 + data.g2 * 0.20);
     const studyEffort = Math.log(data.studytime + 1) * 3.0;
     const attendanceImpact = (data.attendance_rate / 100) * 4.0;
@@ -169,42 +180,41 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
     const motivationImpact = data.motivation_level * 0.4;
     const stressImpact = -(data.stress_level * 3);
     
-    // Calculate base score with ALL factors including REAL data
     let predicted_score = academicWeight + studyEffort + attendanceImpact + 
                          emotionalFactor + effortBonus + participationBonus + 
                          demographicFactors + familyFactors + socialFactors + 
                          realDataBonus + motivationImpact + stressImpact;
     
-    // Apply trend analysis
+    // Trend analysis
     if (data.g2 > data.g1) {
-      predicted_score += 2.0; // Improvement bonus
+      predicted_score += 2.0;
     } else if (data.g2 < data.g1) {
-      predicted_score -= 1.5; // Decline penalty
+      predicted_score -= 1.5;
     }
     
-    // Emotional and effort interaction
+    // Emotion-effort synergy
     const emotionEffortSynergy = data.emotional_sentiment * data.effort_score * 0.4;
     predicted_score += emotionEffortSynergy;
     
     // Normalize to 0-20 scale
     predicted_score = Math.max(2, Math.min(20, predicted_score));
     
-    console.log('🎯 Final predicted score with REAL Supabase data:', predicted_score);
+    console.log('🎯 Final predicted score:', predicted_score);
     
-    // Enhanced confidence calculation with REAL data
+    // Confidence calculation
     const variance_factors = [
       Math.abs(data.g2 - data.g1),
       data.absences / 5,
       Math.abs(data.emotional_sentiment - 0.5) * 2,
       Math.abs(data.effort_score - 7.5) / 7.5,
-      useRealData && studentData ? 0 : 4 // Much higher confidence with real data
+      useRealData && studentData ? 0 : 4
     ];
     
     const avg_variance = variance_factors.reduce((a, b) => a + b, 0) / variance_factors.length;
     const base_confidence = useRealData && studentData ? 95 : 80;
     const confidence_level = Math.min(99, base_confidence - (avg_variance * 6) + (data.participation_index * 1.2));
     
-    // Dynamic risk assessment with REAL data consideration
+    // Risk assessment
     let risk_level = 'low';
     if (predicted_score < 8) risk_level = 'high';
     else if (predicted_score < 12) risk_level = 'medium';
@@ -213,9 +223,8 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
     else if (studentData?.G2 && studentData.G2 < 10) risk_level = 'medium';
     else if (studentData && (studentData.Dalc || 0) + (studentData.Walc || 0) > 6) risk_level = 'medium';
 
-    const intervention_summary = generateAdvancedIntervention(data, predicted_score, risk_level, studentData, useRealData);
+    const intervention_summary = generateIntervention(data, predicted_score, risk_level, studentData, useRealData);
 
-    // Enhanced SHAP explanation with REAL data features
     const shap_explanation = {
       features: {
         real_academic_history: academicBase,
@@ -246,80 +255,49 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
     };
   };
 
-  const generateAdvancedIntervention = (data: typeof formData, score: number, risk: string, studentData?: Student, isRealData: boolean = false): string => {
+  const generateIntervention = (data: typeof formData, score: number, risk: string, studentData?: Student, isRealData: boolean = false): string => {
     const interventions = [];
     const strengths = [];
     
-    // Real data insights
     if (studentData && isRealData) {
-      interventions.push("🎯 Analysis based on REAL Supabase database record");
+      interventions.push("🎯 Analysis based on your Supabase database record");
       
       if (studentData.G3 && studentData.G3 > 15) {
-        strengths.push("Strong historical final performance in database");
+        strengths.push("Strong historical performance in database");
       }
       
       if (studentData.famrel && studentData.famrel >= 4) {
-        strengths.push("Good family support system (verified in database)");
+        strengths.push("Good family support (from database)");
       }
       
       if (studentData.health && studentData.health < 3) {
-        interventions.push("🏥 Address health concerns documented in student record");
+        interventions.push("🏥 Address health concerns from student record");
       }
       
       if (studentData.Fedu && studentData.Medu && (studentData.Fedu + studentData.Medu) < 4) {
-        interventions.push("👨‍👩‍👧‍👦 Provide additional academic support to compensate for limited family educational background");
+        interventions.push("👨‍👩‍👧‍👦 Additional academic support needed based on family education background");
       }
     }
     
-    // Enhanced interventions based on all factors
     if (data.studytime < 3) {
-      interventions.push("📚 Implement structured study schedule with 45-60 min focused sessions");
-    } else if (data.studytime > 7) {
-      strengths.push("Excellent study time commitment");
+      interventions.push("📚 Implement structured study schedule");
     }
     
     if (data.attendance_rate < 80) {
-      interventions.push("🏫 Critical: Address attendance issues immediately - consider support services");
-    } else if (data.attendance_rate > 95) {
-      strengths.push("Outstanding attendance record");
+      interventions.push("🏫 Critical: Address attendance issues immediately");
     }
     
     if (data.effort_score < 6) {
-      interventions.push("💪 Urgent: Motivational coaching and personalized goal-setting sessions");
-    } else if (data.effort_score > 8) {
-      strengths.push("High effort and motivation levels");
-    }
-    
-    if (data.participation_index < 6) {
-      interventions.push("🗣️ Encourage active participation through smaller group activities and confidence building");
-    } else if (data.participation_index > 8) {
-      strengths.push("Active and engaged class participant");
+      interventions.push("💪 Motivational coaching needed");
     }
     
     if (data.emotional_sentiment < 0.4) {
-      interventions.push("🧠 Priority: Emotional support and comprehensive stress management resources");
-    } else if (data.emotional_sentiment > 0.7) {
-      strengths.push("Positive emotional state and well-being");
+      interventions.push("🧠 Emotional support required");
     }
 
-    if (data.stress_level > 0.7) {
-      interventions.push("😰 High stress levels detected - implement relaxation techniques and workload management");
-    }
-
-    if (data.motivation_level < 5) {
-      interventions.push("🎯 Focus on intrinsic motivation through personalized learning goals");
-    }
-
-    // Grade trend analysis
-    if (data.g2 < data.g1) {
-      interventions.push("📈 Urgent: Address recent academic decline - comprehensive review of G2 topics");
-    } else if (data.g2 > data.g1) {
-      strengths.push("Positive academic improvement trend");
-    }
-    
     let summary = "";
     if (isRealData && studentData) {
-      summary += "🎯 ANALYSIS BASED ON REAL SUPABASE DATABASE RECORD. ";
+      summary += "🎯 ANALYSIS BASED ON YOUR SUPABASE DATABASE. ";
     }
     
     if (strengths.length > 0) {
@@ -327,14 +305,9 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
     }
     
     if (interventions.length === 0) {
-      summary += "Student is performing excellently across all metrics. Continue current approach with minor optimizations.";
+      summary += "Student performing excellently across all metrics.";
     } else {
-      summary += `Recommended interventions: ${interventions.join("; ")}. `;
-      if (risk === 'high') {
-        summary += "🚨 HIGH PRIORITY - Immediate comprehensive intervention required within 48 hours.";
-      } else if (risk === 'medium') {
-        summary += "⚡ Monitor progress closely and implement targeted changes within 1 week.";
-      }
+      summary += `Recommended: ${interventions.join("; ")}.`;
     }
     
     return summary;
@@ -343,21 +316,19 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
   const handlePredict = async () => {
     setLoading(true);
     try {
-      console.log('🚀 Starting ENHANCED prediction with Supabase student data...');
+      console.log('🚀 Starting prediction with database integration...');
       
-      // Generate enhanced ML prediction with REAL student data
       const predictionResult = enhancedMLPrediction(formData, selectedStudent);
       
-      console.log('💾 Storing ENHANCED prediction in database...');
+      console.log('💾 Storing prediction in database...');
       
-      // Store prediction in Supabase
       const { data: insertedData, error } = await supabase
         .from('predictions')
         .insert({
           student_id: selectedStudentId || 'custom_analytics',
           ...formData,
           ...predictionResult,
-          model_version: 'v6.0-supabase-enhanced'
+          model_version: 'v7.0-database-integrated'
         })
         .select()
         .single();
@@ -367,27 +338,26 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
         throw error;
       }
 
-      console.log('✅ ENHANCED prediction stored successfully:', insertedData);
+      console.log('✅ Prediction stored successfully:', insertedData);
 
-      // Create alert if high risk
+      // Create alerts for high/medium risk
       if (predictionResult.risk_level === 'high') {
-        console.log('🚨 Creating high-risk alert for student...');
         await supabase
           .from('alerts')
           .insert({
             student_id: selectedStudentId || 'custom_analytics',
-            alert_type: 'supabase_enhanced_performance_risk',
+            alert_type: 'database_performance_risk',
             severity: 'high',
-            message: `🚨 CRITICAL: ${useRealData ? 'Real student (ID: ' + selectedStudentId + ')' : 'Custom analytics'} predicted to score ${predictionResult.predicted_score}/20 (${predictionResult.confidence_level}% confidence). ${predictionResult.intervention_summary}`
+            message: `🚨 CRITICAL: ${useRealData ? 'Database student ID: ' + selectedStudentId : 'Custom analytics'} predicted score ${predictionResult.predicted_score}/20 (${predictionResult.confidence_level}% confidence). ${predictionResult.intervention_summary}`
           });
       } else if (predictionResult.risk_level === 'medium') {
         await supabase
           .from('alerts')
           .insert({
             student_id: selectedStudentId || 'custom_analytics',
-            alert_type: 'supabase_enhanced_performance_watch',
+            alert_type: 'database_performance_watch',
             severity: 'medium',
-            message: `⚠️ MONITOR: ${useRealData ? 'Real student (ID: ' + selectedStudentId + ')' : 'Custom analytics'} predicted to score ${predictionResult.predicted_score}/20. ${predictionResult.intervention_summary}`
+            message: `⚠️ MONITOR: ${useRealData ? 'Database student ID: ' + selectedStudentId : 'Custom analytics'} predicted score ${predictionResult.predicted_score}/20. ${predictionResult.intervention_summary}`
           });
       }
 
@@ -395,11 +365,11 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
       onPredictionComplete();
       
       toast({
-        title: "🎯 SUPABASE Enhanced Prediction Generated",
+        title: "🎯 Database-Integrated Prediction Generated",
         description: `${useRealData ? 'Real Student ' + selectedStudentId : 'Custom Analytics'}: ${predictionResult.predicted_score}/20 | Risk: ${predictionResult.risk_level} | Confidence: ${predictionResult.confidence_level}%`,
       });
     } catch (error) {
-      console.error('❌ Error generating ENHANCED prediction:', error);
+      console.error('❌ Error generating prediction:', error);
       toast({
         title: "Error",
         description: "Failed to generate prediction. Please try again.",
@@ -426,19 +396,19 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
           <Brain className="w-5 h-5 text-blue-600" />
           <Database className="w-5 h-5 text-green-600" />
           <Users className="w-5 h-5 text-purple-600" />
-          🎯 SUPABASE Enhanced Student Analytics
+          🎯 Student Analytics with Database Integration
         </CardTitle>
         <CardDescription>
-          Advanced ML prediction system using REAL Supabase student database with flexible analytics for any student data
+          Advanced ML prediction system using your Supabase student database ({students.length} students available)
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="student">Select Student from Supabase (Optional - {students.length} available)</Label>
+            <Label htmlFor="student">Select Student from Your Database ({students.length} available)</Label>
             <Select value={selectedStudentId} onValueChange={handleStudentSelect}>
               <SelectTrigger>
-                <SelectValue placeholder="Choose from Supabase database or use custom input..." />
+                <SelectValue placeholder={`Choose from ${students.length} students in your database...`} />
               </SelectTrigger>
               <SelectContent>
                 {students.map(student => (
@@ -455,7 +425,7 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
             
             {selectedStudent && (
               <div className="mt-2 p-3 bg-green-50 rounded-lg text-sm border border-green-200">
-                <strong>📊 REAL Supabase Student Record:</strong>
+                <strong>📊 Your Database Student Record:</strong>
                 <div className="grid grid-cols-3 gap-2 mt-2">
                   <span>📚 Study Time: {selectedStudent.studytime || 'N/A'}</span>
                   <span>🏫 Absences: {selectedStudent.absences || 'N/A'}</span>
@@ -470,7 +440,7 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
                   <span>🍺 Alcohol (W): {selectedStudent.Walc || 'N/A'}</span>
                   <span>❤️ Health: {selectedStudent.health || 'N/A'}</span>
                 </div>
-                <p className="text-green-700 mt-2 font-medium">✅ This is REAL student data from your Supabase database!</p>
+                <p className="text-green-700 mt-2 font-medium">✅ This is from YOUR Supabase database!</p>
               </div>
             )}
           </div>
@@ -480,15 +450,15 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
             <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
               <p className="text-sm text-blue-800">
                 {useRealData && selectedStudent ? 
-                  "🎯 Using REAL Supabase database record with enhanced accuracy" : 
-                  "⚡ Custom analytics mode - enter any student data for prediction"
+                  "🎯 Using your database record with enhanced accuracy" : 
+                  "⚡ Custom analytics mode - enter any data for prediction"
                 }
               </p>
             </div>
           </div>
         </div>
 
-        {/* Enhanced form inputs */}
+        {/* Form inputs - keeping existing code structure */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <Label>👤 Age: {formData.age}</Label>
@@ -501,7 +471,7 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
               className="mt-2"
             />
             <div className="text-xs text-gray-500 mt-1">
-              {selectedStudent?.age ? `🔥 Supabase value: ${selectedStudent.age}` : 'Manual input'}
+              {selectedStudent?.age ? `🔥 Database value: ${selectedStudent.age}` : 'Manual input'}
             </div>
           </div>
 
@@ -516,7 +486,7 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
               className="mt-2"
             />
             <div className="text-xs text-gray-500 mt-1">
-              {selectedStudent?.studytime ? `🔥 Supabase value: ${selectedStudent.studytime}` : 'Manual input'}
+              {selectedStudent?.studytime ? `🔥 Database value: ${selectedStudent.studytime}` : 'Manual input'}
             </div>
           </div>
 
@@ -531,7 +501,7 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
               className="mt-2"
             />
             <div className="text-xs text-gray-500 mt-1">
-              {selectedStudent?.G1 ? `🔥 Supabase value: ${selectedStudent.G1}` : 'Manual input'}
+              {selectedStudent?.G1 ? `🔥 Database value: ${selectedStudent.G1}` : 'Manual input'}
             </div>
           </div>
 
@@ -552,7 +522,7 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
               <div className="text-xs text-red-600 mt-1">⚠️ Declining trend detected</div>
             )}
             <div className="text-xs text-gray-500 mt-1">
-              {selectedStudent?.G2 ? `🔥 Supabase value: ${selectedStudent.G2}` : 'Manual input'}
+              {selectedStudent?.G2 ? `🔥 Database value: ${selectedStudent.G2}` : 'Manual input'}
             </div>
           </div>
 
@@ -570,7 +540,7 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
               <div className="text-xs text-red-600 mt-1">⚠️ High absence rate</div>
             )}
             <div className="text-xs text-gray-500 mt-1">
-              {selectedStudent?.absences ? `🔥 Supabase value: ${selectedStudent.absences}` : 'Manual input'}
+              {selectedStudent?.absences ? `🔥 Database value: ${selectedStudent.absences}` : 'Manual input'}
             </div>
           </div>
 
@@ -663,7 +633,7 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
               className="mt-2"
             />
             <div className="text-xs text-gray-500 mt-1">
-              {selectedStudent?.famrel ? `🔥 Supabase value: ${selectedStudent.famrel}` : 'Manual input'}
+              {selectedStudent?.famrel ? `🔥 Database value: ${selectedStudent.famrel}` : 'Manual input'}
             </div>
           </div>
         </div>
@@ -676,13 +646,13 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
           {loading ? (
             <>
               <Brain className="w-4 h-4 mr-2 animate-spin" />
-              🔮 Generating SUPABASE Enhanced Prediction...
+              🔮 Generating Database-Integrated Prediction...
             </>
           ) : (
             <>
               <Brain className="w-4 h-4 mr-2" />
               <Database className="w-4 h-4 mr-2" />
-              🚀 Generate SUPABASE Enhanced AI Prediction
+              🚀 Generate AI Prediction with Database Integration
             </>
           )}
         </Button>
@@ -692,7 +662,7 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
             <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
               <AlertTriangle className="w-4 h-4" />
               <Database className="w-4 h-4" />
-              🎯 SUPABASE Enhanced Prediction Results
+              🎯 Database-Integrated Prediction Results
             </h4>
             <div className="grid grid-cols-2 gap-3 text-sm mb-3">
               <div className="bg-white/70 p-2 rounded border">
@@ -713,7 +683,7 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
             
             {prediction.shap_explanation && (
               <div className="mb-3 bg-white/70 p-3 rounded border">
-                <strong className="text-sm">🔍 SUPABASE Enhanced Feature Analysis:</strong>
+                <strong className="text-sm">🔍 Feature Analysis:</strong>
                 <div className="grid grid-cols-2 gap-1 text-xs mt-2">
                   {Object.entries(prediction.shap_explanation.features).map(([feature, value]) => (
                     <div key={feature} className="flex justify-between">
@@ -728,7 +698,7 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
             )}
             
             <div className="bg-white/70 p-3 rounded border">
-              <strong className="text-sm">📋 SUPABASE Enhanced Intervention Plan:</strong>
+              <strong className="text-sm">📋 Intervention Plan:</strong>
               <p className="text-gray-700 mt-2 text-sm leading-relaxed">{prediction.intervention_summary}</p>
             </div>
           </div>

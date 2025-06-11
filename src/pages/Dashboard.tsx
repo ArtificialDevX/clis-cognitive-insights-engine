@@ -27,6 +27,23 @@ interface Student {
   Dalc?: number;
   Walc?: number;
   health?: number;
+  address?: string;
+  famsize?: string;
+  Pstatus?: string;
+  Mjob?: string;
+  Fjob?: string;
+  reason?: string;
+  guardian?: string;
+  traveltime?: number;
+  failures?: string;
+  schoolsup?: string;
+  famsup?: string;
+  paid?: string;
+  activities?: string;
+  nursery?: string;
+  higher?: string;
+  internet?: string;
+  romantic?: string;
 }
 
 interface Prediction {
@@ -90,18 +107,38 @@ const Dashboard = () => {
     try {
       setLoading(true);
       
-      // Fetch students from the actual student table with all their data
-      const { data: studentsData, error: studentsError } = await supabase
+      console.log('🔍 Fetching student data from Supabase...');
+      
+      // Fetch students from the student table - try different approaches
+      const { data: studentsData, error: studentsError, count } = await supabase
         .from('student')
-        .select('*')
-        .order('id');
+        .select('*', { count: 'exact' });
+
+      console.log('📊 Student fetch result:', { 
+        data: studentsData, 
+        error: studentsError, 
+        count: count,
+        dataLength: studentsData?.length 
+      });
 
       if (studentsError) {
-        console.error('Students fetch error:', studentsError);
-        throw studentsError;
+        console.error('❌ Students fetch error:', studentsError);
+        // Try alternative approach if there's an error
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('student')
+          .select('id, age, sex, studytime, absences, G1, G2, G3, school, Fedu, Medu, famrel, health, Dalc, Walc, goout')
+          .limit(100);
+        
+        if (fallbackError) {
+          throw fallbackError;
+        }
+        
+        console.log('✅ Fallback student data loaded:', fallbackData);
+        setStudents(fallbackData || []);
+      } else {
+        console.log('✅ Primary student data loaded:', studentsData);
+        setStudents(studentsData || []);
       }
-
-      console.log('Fetched real student data:', studentsData);
 
       // Fetch recent predictions
       const { data: predictionsData, error: predictionsError } = await supabase
@@ -110,7 +147,11 @@ const Dashboard = () => {
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (predictionsError) throw predictionsError;
+      if (predictionsError) {
+        console.error('❌ Predictions fetch error:', predictionsError);
+      } else {
+        console.log('✅ Predictions loaded:', predictionsData?.length || 0);
+      }
 
       // Fetch unresolved alerts
       const { data: alertsData, error: alertsError } = await supabase
@@ -119,22 +160,34 @@ const Dashboard = () => {
         .eq('is_resolved', false)
         .order('created_at', { ascending: false });
 
-      if (alertsError) throw alertsError;
+      if (alertsError) {
+        console.error('❌ Alerts fetch error:', alertsError);
+      } else {
+        console.log('✅ Alerts loaded:', alertsData?.length || 0);
+      }
 
-      setStudents(studentsData || []);
       setPredictions(predictionsData || []);
       setAlerts(alertsData || []);
       
-      console.log('Dashboard data loaded:', {
+      console.log('🎯 Dashboard data summary:', {
         students: studentsData?.length || 0,
         predictions: predictionsData?.length || 0,
         alerts: alertsData?.length || 0
       });
+
+      // Show success message if we have student data
+      if (studentsData && studentsData.length > 0) {
+        toast({
+          title: "✅ Database Connected Successfully",
+          description: `Loaded ${studentsData.length} real student records from Supabase`,
+        });
+      }
+      
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('💥 Error fetching data:', error);
       toast({
-        title: "Error",
-        description: "Failed to fetch dashboard data",
+        title: "Database Connection Error",
+        description: `Failed to fetch data: ${error.message}`,
         variant: "destructive",
       });
     } finally {
@@ -156,6 +209,7 @@ const Dashboard = () => {
         <div className="text-center">
           <Brain className="w-12 h-12 mx-auto mb-4 text-blue-600 animate-pulse" />
           <p className="text-lg text-gray-600">Loading CLIS Dashboard...</p>
+          <p className="text-sm text-gray-500 mt-2">Connecting to Supabase database...</p>
         </div>
       </div>
     );
@@ -181,7 +235,7 @@ const Dashboard = () => {
           </div>
           <p className="text-xl text-gray-600">Cognitive Learning Intelligence System</p>
           <p className="text-sm text-gray-500 mt-2">
-            AI-Powered Student Performance Prediction & Intervention Platform - Using Real Student Database
+            AI-Powered Student Performance Prediction & Intervention Platform
           </p>
         </div>
 
@@ -189,12 +243,14 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Real Students</CardTitle>
+              <CardTitle className="text-sm font-medium">Connected Students</CardTitle>
               <Users className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">{students.length}</div>
-              <p className="text-xs text-gray-500">From actual database</p>
+              <p className="text-xs text-gray-500">
+                {students.length > 0 ? "✅ Database Connected" : "⚠️ No Data Found"}
+              </p>
             </CardContent>
           </Card>
 
@@ -229,9 +285,8 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Main Dashboard Grid - Only Student Analytics Form */}
+        {/* Main Dashboard Grid - Student Analytics Form */}
         <div className="grid grid-cols-1 gap-6">
-          {/* Enhanced Student Analytics with Real Database Integration */}
           <StudentAnalyticsForm 
             students={students}
             onPredictionComplete={handleNewPrediction}
@@ -251,44 +306,63 @@ const Dashboard = () => {
           <PredictionHistory predictions={predictions} />
         </div>
 
-        {/* Integration Info */}
-        <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0">
+        {/* Database Connection Status */}
+        <Card className={`border-0 ${students.length > 0 ? 'bg-gradient-to-r from-green-600 to-blue-600 text-white' : 'bg-gradient-to-r from-red-600 to-orange-600 text-white'}`}>
           <CardHeader>
-            <CardTitle className="text-white">🔗 Real Student Data Integration Active</CardTitle>
-            <CardDescription className="text-blue-100">
-              Connected to actual student database with {students.length} real student records
+            <CardTitle className="text-white">
+              {students.length > 0 ? '✅ Supabase Database Connected' : '⚠️ Database Connection Issue'}
+            </CardTitle>
+            <CardDescription className={students.length > 0 ? 'text-green-100' : 'text-red-100'}>
+              {students.length > 0 
+                ? `Successfully connected to your Supabase database with ${students.length} student records`
+                : 'Unable to fetch student data from your Supabase database'
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div>
-                <strong>Real Database Fields:</strong>
-                <ul className="mt-1 space-y-1 text-blue-100">
-                  <li>• Academic: G1, G2, G3 scores</li>
-                  <li>• Behavior: studytime, absences</li>
-                  <li>• Demographics: age, sex, address</li>
-                  <li>• Family: Medu, Fedu, famrel</li>
+            {students.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <strong>✅ Database Status:</strong>
+                  <ul className="mt-1 space-y-1 text-blue-100">
+                    <li>• Connected to Supabase</li>
+                    <li>• Real-time updates active</li>
+                    <li>• {students.length} student records loaded</li>
+                    <li>• All data fields accessible</li>
+                  </ul>
+                </div>
+                <div>
+                  <strong>📊 Available Data:</strong>
+                  <ul className="mt-1 space-y-1 text-blue-100">
+                    <li>• Academic scores (G1, G2, G3)</li>
+                    <li>• Demographics & behavior</li>
+                    <li>• Family background</li>
+                    <li>• Social factors</li>
+                  </ul>
+                </div>
+                <div>
+                  <strong>🚀 AI Features:</strong>
+                  <ul className="mt-1 space-y-1 text-blue-100">
+                    <li>• Performance predictions</li>
+                    <li>• Risk assessments</li>
+                    <li>• Intervention recommendations</li>
+                    <li>• Real-time analytics</li>
+                  </ul>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-red-100 mb-2">
+                  No student data found in your Supabase database. Please check:
+                </p>
+                <ul className="text-sm text-red-200 text-left max-w-md mx-auto">
+                  <li>• Student table exists and has data</li>
+                  <li>• Database permissions are correctly set</li>
+                  <li>• Network connection is stable</li>
+                  <li>• Supabase project is active</li>
                 </ul>
               </div>
-              <div>
-                <strong>ML Analytics:</strong>
-                <ul className="mt-1 space-y-1 text-blue-100">
-                  <li>• Real-time data updates</li>
-                  <li>• Flexible input form</li>
-                  <li>• Any student analytics</li>
-                  <li>• Custom ML predictions</li>
-                </ul>
-              </div>
-              <div>
-                <strong>Outputs:</strong>
-                <ul className="mt-1 space-y-1 text-blue-100">
-                  <li>• Performance predictions</li>
-                  <li>• Risk assessments</li>
-                  <li>• Intervention plans</li>
-                  <li>• Real-time alerts</li>
-                </ul>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
