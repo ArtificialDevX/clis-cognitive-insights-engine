@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -108,37 +107,64 @@ const Dashboard = () => {
       setLoading(true);
       
       console.log('🔍 Fetching student data from Supabase...');
+      console.log('📡 Using Supabase URL:', supabase.supabaseUrl);
       
-      // Fetch students from the student table - try different approaches
-      const { data: studentsData, error: studentsError, count } = await supabase
+      // Try multiple approaches to fetch student data
+      let studentsData = null;
+      let studentsError = null;
+      
+      // First attempt: Standard query
+      console.log('📝 Attempting standard query...');
+      const { data: standardData, error: standardError } = await supabase
         .from('student')
-        .select('*', { count: 'exact' });
-
-      console.log('📊 Student fetch result:', { 
-        data: studentsData, 
-        error: studentsError, 
-        count: count,
-        dataLength: studentsData?.length 
-      });
-
-      if (studentsError) {
-        console.error('❌ Students fetch error:', studentsError);
-        // Try alternative approach if there's an error
-        const { data: fallbackData, error: fallbackError } = await supabase
+        .select('*')
+        .limit(1000);
+      
+      if (standardError) {
+        console.error('❌ Standard query error:', standardError);
+        
+        // Second attempt: Try with specific columns
+        console.log('📝 Attempting with specific columns...');
+        const { data: columnData, error: columnError } = await supabase
           .from('student')
           .select('id, age, sex, studytime, absences, G1, G2, G3, school, Fedu, Medu, famrel, health, Dalc, Walc, goout')
           .limit(100);
-        
-        if (fallbackError) {
-          throw fallbackError;
+          
+        if (columnError) {
+          console.error('❌ Column query error:', columnError);
+          
+          // Third attempt: Try to just count records
+          console.log('📝 Attempting to count records...');
+          const { count, error: countError } = await supabase
+            .from('student')
+            .select('*', { count: 'exact', head: true });
+            
+          if (countError) {
+            console.error('❌ Count query error:', countError);
+            throw new Error(`All query attempts failed. Last error: ${countError.message}`);
+          } else {
+            console.log('📊 Record count successful:', count);
+            toast({
+              title: "Database Connection Issue",
+              description: `Found ${count} records but cannot access data. This might be a permissions issue.`,
+              variant: "destructive",
+            });
+          }
+        } else {
+          studentsData = columnData;
+          console.log('✅ Column query successful:', columnData?.length || 0);
         }
-        
-        console.log('✅ Fallback student data loaded:', fallbackData);
-        setStudents(fallbackData || []);
       } else {
-        console.log('✅ Primary student data loaded:', studentsData);
-        setStudents(studentsData || []);
+        studentsData = standardData;
+        console.log('✅ Standard query successful:', standardData?.length || 0);
       }
+
+      console.log('📊 Student fetch result:', { 
+        data: studentsData, 
+        dataLength: studentsData?.length 
+      });
+
+      setStudents(studentsData || []);
 
       // Fetch recent predictions
       const { data: predictionsData, error: predictionsError } = await supabase
@@ -181,6 +207,28 @@ const Dashboard = () => {
           title: "✅ Database Connected Successfully",
           description: `Loaded ${studentsData.length} real student records from Supabase`,
         });
+      } else {
+        console.warn('⚠️ No student data found - checking for permission issues...');
+        
+        // Check if table exists by trying to get table info
+        const { data: tableInfo, error: tableError } = await supabase
+          .from('student')
+          .select('id')
+          .limit(1);
+          
+        if (tableError) {
+          toast({
+            title: "Database Permission Error",
+            description: `Cannot access student table: ${tableError.message}. Please check RLS policies.`,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "No Student Data",
+            description: "Connected to database but no student records found. Please add some data to the student table.",
+            variant: "destructive",
+          });
+        }
       }
       
     } catch (error) {
@@ -315,7 +363,7 @@ const Dashboard = () => {
             <CardDescription className={students.length > 0 ? 'text-green-100' : 'text-red-100'}>
               {students.length > 0 
                 ? `Successfully connected to your Supabase database with ${students.length} student records`
-                : 'Unable to fetch student data from your Supabase database'
+                : 'Unable to fetch student data from your Supabase database - this might be a permissions issue'
               }
             </CardDescription>
           </CardHeader>
@@ -353,14 +401,17 @@ const Dashboard = () => {
             ) : (
               <div className="text-center py-4">
                 <p className="text-red-100 mb-2">
-                  No student data found in your Supabase database. Please check:
+                  Cannot access student data. This could be due to:
                 </p>
                 <ul className="text-sm text-red-200 text-left max-w-md mx-auto">
-                  <li>• Student table exists and has data</li>
-                  <li>• Database permissions are correctly set</li>
-                  <li>• Network connection is stable</li>
-                  <li>• Supabase project is active</li>
+                  <li>• Row Level Security (RLS) policies blocking access</li>
+                  <li>• No SELECT permissions for anonymous users</li>
+                  <li>• Empty student table</li>
+                  <li>• Network connection issues</li>
                 </ul>
+                <p className="text-red-100 mt-4 text-sm">
+                  Check your Supabase project settings and RLS policies.
+                </p>
               </div>
             )}
           </CardContent>
