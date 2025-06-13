@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, ScatterChart, Scatter } from 'recharts';
-import { Brain, TrendingUp, TrendingDown, AlertTriangle, Target, Zap, Activity, BarChart3 } from 'lucide-react';
+import { Brain, TrendingUp, TrendingDown, AlertTriangle, Target, Zap, Activity, BarChart3, Users, Award } from 'lucide-react';
 
 interface Prediction {
   id: string;
@@ -16,20 +17,7 @@ interface Prediction {
   g1: number;
   g2: number;
   model_version: string;
-  backend_source?: string;
-  age?: number;
-  studytime?: number;
-  absences?: number;
-  effort_score?: number;
-  emotional_sentiment?: number;
-  participation_index?: number;
-  family_support?: number;
-  health_score?: number;
-  social_activity?: number;
-  alcohol_consumption?: number;
-  attendance_rate?: number;
-  motivation_level?: number;
-  stress_level?: number;
+  students?: { name: string };
 }
 
 interface PredictionVisualizationProps {
@@ -37,415 +25,381 @@ interface PredictionVisualizationProps {
 }
 
 const PredictionVisualization = ({ predictions }: PredictionVisualizationProps) => {
-  // Data processing for various charts
-  const riskDistribution = [
-    { name: 'Low Risk', value: predictions.filter(p => p.risk_level === 'low').length, color: '#10b981' },
-    { name: 'Medium Risk', value: predictions.filter(p => p.risk_level === 'medium').length, color: '#f59e0b' },
-    { name: 'High Risk', value: predictions.filter(p => p.risk_level === 'high').length, color: '#ef4444' },
-  ];
+  // Process data for visualizations
+  const scoreDistribution = React.useMemo(() => {
+    const buckets = [
+      { range: '0-5', count: 0, color: '#ef4444' },
+      { range: '6-10', count: 0, color: '#f97316' },
+      { range: '11-15', count: 0, color: '#eab308' },
+      { range: '16-20', count: 0, color: '#22c55e' }
+    ];
+    
+    predictions.forEach(p => {
+      if (p.predicted_score <= 5) buckets[0].count++;
+      else if (p.predicted_score <= 10) buckets[1].count++;
+      else if (p.predicted_score <= 15) buckets[2].count++;
+      else buckets[3].count++;
+    });
+    
+    return buckets;
+  }, [predictions]);
 
-  const scoreDistribution = predictions.map(p => ({
-    name: `Student ${p.student_id.slice(-4)}`,
-    predicted_score: p.predicted_score,
-    confidence: p.confidence_level,
-    risk_level: p.risk_level,
-    g1: p.g1,
-    g2: p.g2,
-    trend: p.g2 - p.g1,
-  }));
+  const riskAnalysis = React.useMemo(() => {
+    const analysis = { high: 0, medium: 0, low: 0 };
+    predictions.forEach(p => {
+      analysis[p.risk_level as keyof typeof analysis]++;
+    });
+    
+    return [
+      { name: 'Low Risk', value: analysis.low, color: '#10b981', percentage: Math.round((analysis.low / predictions.length) * 100) || 0 },
+      { name: 'Medium Risk', value: analysis.medium, color: '#f59e0b', percentage: Math.round((analysis.medium / predictions.length) * 100) || 0 },
+      { name: 'High Risk', value: analysis.high, color: '#ef4444', percentage: Math.round((analysis.high / predictions.length) * 100) || 0 }
+    ];
+  }, [predictions]);
 
-  const confidenceAnalysis = predictions.map(p => ({
-    score: p.predicted_score,
-    confidence: p.confidence_level,
-    risk: p.risk_level,
-    name: `Student ${p.student_id.slice(-4)}`,
-  }));
+  const timelineData = React.useMemo(() => {
+    return predictions
+      .slice(0, 10)
+      .map(p => ({
+        name: p.students?.name?.split(' ')[0] || 'Student',
+        score: p.predicted_score,
+        confidence: p.confidence_level,
+        date: new Date(p.created_at).toLocaleDateString()
+      }))
+      .reverse();
+  }, [predictions]);
 
-  const timeSeriesData = predictions
-    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-    .map((p, index) => ({
-      index: index + 1,
-      score: p.predicted_score,
-      confidence: p.confidence_level,
-      date: new Date(p.created_at).toLocaleDateString(),
-    }));
+  const performanceMetrics = React.useMemo(() => {
+    const avgScore = predictions.length > 0 
+      ? (predictions.reduce((sum, p) => sum + p.predicted_score, 0) / predictions.length)
+      : 0;
+    const avgConfidence = predictions.length > 0 
+      ? (predictions.reduce((sum, p) => sum + (p.confidence_level || 0), 0) / predictions.length)
+      : 0;
+    const highRiskCount = predictions.filter(p => p.risk_level === 'high').length;
+    const improvingStudents = predictions.filter(p => p.g2 > p.g1).length;
 
-  const factorAnalysis = predictions.length > 0 ? [
-    { factor: 'Study Time', avg: predictions.reduce((sum, p) => sum + (p.studytime || 0), 0) / predictions.length },
-    { factor: 'Attendance', avg: predictions.reduce((sum, p) => sum + (p.attendance_rate || 0), 0) / predictions.length },
-    { factor: 'Effort Score', avg: predictions.reduce((sum, p) => sum + (p.effort_score || 0), 0) / predictions.length },
-    { factor: 'Motivation', avg: predictions.reduce((sum, p) => sum + (p.motivation_level || 0), 0) / predictions.length },
-    { factor: 'Family Support', avg: predictions.reduce((sum, p) => sum + (p.family_support || 0), 0) / predictions.length },
-    { factor: 'Health Score', avg: predictions.reduce((sum, p) => sum + (p.health_score || 0), 0) / predictions.length },
-  ] : [];
-
-  const getRiskColor = (risk: string) => {
-    switch (risk) {
-      case 'high': return '#ef4444';
-      case 'medium': return '#f59e0b';
-      case 'low': return '#10b981';
-      default: return '#64748b';
-    }
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= 16) return '#10b981';
-    if (score >= 12) return '#f59e0b';
-    return '#ef4444';
-  };
+    return { avgScore, avgConfidence, highRiskCount, improvingStudents };
+  }, [predictions]);
 
   if (predictions.length === 0) {
     return (
-      <Card className="bg-white border border-slate-200">
-        <CardContent className="flex flex-col items-center justify-center py-12">
-          <Brain className="w-16 h-16 text-slate-400 mb-4" />
-          <h3 className="text-lg font-semibold text-slate-700 mb-2">No Colab Predictions Yet</h3>
-          <p className="text-slate-500 text-center">Generate predictions using your Colab backend to see comprehensive visualizations here.</p>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 gap-8">
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50">
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+              <Brain className="w-10 h-10 text-blue-600" />
+            </div>
+            <h3 className="text-2xl font-bold text-slate-800 mb-3">No Predictions Yet</h3>
+            <p className="text-slate-600 text-center max-w-md leading-relaxed">
+              Generate your first AI prediction to see comprehensive analytics and visualizations here
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-slate-800 flex items-center justify-center gap-2">
-          <Brain className="w-7 h-7 text-blue-600" />
-          <Zap className="w-6 h-6 text-green-600" />
-          Colab Backend ML Predictions Visualization
-        </h2>
-        <p className="text-slate-600 mt-2">
-          Comprehensive analytics from {predictions.length} real backend predictions
+    <div className="space-y-8">
+      {/* Header Section */}
+      <div className="text-center space-y-4">
+        <div className="flex items-center justify-center gap-3">
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
+            <BarChart3 className="w-6 h-6 text-white" />
+          </div>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            ML Prediction Analytics
+          </h2>
+        </div>
+        <p className="text-slate-600 max-w-2xl mx-auto">
+          Real-time insights from your Colab ML backend with comprehensive performance analysis
         </p>
       </div>
 
-      {/* Key Metrics Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-          <CardContent className="p-4">
+      {/* Key Metrics Dashboard */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-50 to-teal-50 hover:shadow-xl transition-all duration-300">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-600 text-sm font-medium">Total Predictions</p>
-                <p className="text-2xl font-bold text-blue-800">{predictions.length}</p>
+                <p className="text-emerald-700 text-sm font-medium">Average Score</p>
+                <p className="text-3xl font-bold text-emerald-800">
+                  {performanceMetrics.avgScore.toFixed(1)}/20
+                </p>
               </div>
-              <Brain className="w-8 h-8 text-blue-600" />
+              <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+                <Target className="w-6 h-6 text-emerald-600" />
+              </div>
+            </div>
+            <Progress value={(performanceMetrics.avgScore / 20) * 100} className="mt-3 h-2" />
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-cyan-50 hover:shadow-xl transition-all duration-300">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-700 text-sm font-medium">AI Confidence</p>
+                <p className="text-3xl font-bold text-blue-800">
+                  {performanceMetrics.avgConfidence.toFixed(0)}%
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                <Brain className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+            <Progress value={performanceMetrics.avgConfidence} className="mt-3 h-2" />
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-rose-50 to-pink-50 hover:shadow-xl transition-all duration-300">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-rose-700 text-sm font-medium">High Risk</p>
+                <p className="text-3xl font-bold text-rose-800">
+                  {performanceMetrics.highRiskCount}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-rose-600" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-          <CardContent className="p-4">
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-violet-50 to-purple-50 hover:shadow-xl transition-all duration-300">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-600 text-sm font-medium">Avg Score</p>
-                <p className="text-2xl font-bold text-green-800">
-                  {(predictions.reduce((sum, p) => sum + p.predicted_score, 0) / predictions.length).toFixed(1)}/20
+                <p className="text-violet-700 text-sm font-medium">Improving</p>
+                <p className="text-3xl font-bold text-violet-800">
+                  {performanceMetrics.improvingStudents}
                 </p>
               </div>
-              <Target className="w-8 h-8 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-600 text-sm font-medium">Avg Confidence</p>
-                <p className="text-2xl font-bold text-purple-800">
-                  {(predictions.reduce((sum, p) => sum + (p.confidence_level || 0), 0) / predictions.length).toFixed(1)}%
-                </p>
+              <div className="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-violet-600" />
               </div>
-              <Activity className="w-8 h-8 text-purple-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-600 text-sm font-medium">High Risk</p>
-                <p className="text-2xl font-bold text-red-800">
-                  {predictions.filter(p => p.risk_level === 'high').length}
-                </p>
-              </div>
-              <AlertTriangle className="w-8 h-8 text-red-600" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Score Distribution Bar Chart */}
-        <Card className="bg-white border border-slate-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-slate-800">
-              <BarChart3 className="w-5 h-5 text-blue-600" />
-              Predicted Scores Distribution
+      {/* Main Analytics Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Score Distribution */}
+        <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-3 text-xl text-slate-800">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <BarChart3 className="w-4 h-4 text-blue-600" />
+              </div>
+              Score Distribution
             </CardTitle>
-            <CardDescription>Individual student performance predictions from Colab backend</CardDescription>
+            <CardDescription className="text-slate-600">
+              Distribution of predicted academic performance scores
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={scoreDistribution.slice(0, 10)}>
+                <BarChart data={scoreDistribution} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                  <YAxis domain={[0, 20]} />
-                  <Tooltip
-                    content={({ active, payload, label }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload;
-                        return (
-                          <div className="bg-white p-3 border border-slate-200 rounded-lg shadow-lg">
-                            <p className="font-semibold text-slate-800">{label}</p>
-                            <p className="text-blue-600">Score: <strong>{data.predicted_score}/20</strong></p>
-                            <p className="text-purple-600">Confidence: <strong>{data.confidence}%</strong></p>
-                            <p className="text-slate-600">Risk: <Badge style={{ backgroundColor: getRiskColor(data.risk_level) }}>{data.risk_level}</Badge></p>
-                            <p className="text-slate-600">Trend: {data.g1}→{data.g2} ({data.trend > 0 ? '+' : ''}{data.trend})</p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Bar 
-                    dataKey="predicted_score" 
-                    fill="#3b82f6"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Risk Level Distribution Pie Chart */}
-        <Card className="bg-white border border-slate-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-slate-800">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
-              Risk Level Distribution
-            </CardTitle>
-            <CardDescription>Breakdown of student risk categories</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={riskDistribution}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    fill="#8884d8"
-                    dataKey="value"
-                    label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
-                  >
-                    {riskDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Confidence vs Score Scatter Plot */}
-        <Card className="bg-white border border-slate-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-slate-800">
-              <Activity className="w-5 h-5 text-purple-600" />
-              Confidence vs Predicted Score
-            </CardTitle>
-            <CardDescription>Relationship between model confidence and predicted scores</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart>
-                  <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
-                    type="number" 
-                    dataKey="score" 
-                    domain={[0, 20]} 
-                    name="Predicted Score"
+                    dataKey="range" 
+                    tick={{ fontSize: 12, fill: '#64748b' }}
+                    axisLine={{ stroke: '#e2e8f0' }}
                   />
                   <YAxis 
-                    type="number" 
-                    dataKey="confidence" 
-                    domain={[0, 100]} 
-                    name="Confidence %"
+                    tick={{ fontSize: 12, fill: '#64748b' }}
+                    axisLine={{ stroke: '#e2e8f0' }}
                   />
                   <Tooltip 
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload;
-                        return (
-                          <div className="bg-white p-3 border border-slate-200 rounded-lg shadow-lg">
-                            <p className="font-semibold">{data.name}</p>
-                            <p>Score: <strong>{data.score}/20</strong></p>
-                            <p>Confidence: <strong>{data.confidence}%</strong></p>
-                            <p>Risk: <Badge style={{ backgroundColor: getRiskColor(data.risk) }}>{data.risk}</Badge></p>
-                          </div>
-                        );
-                      }
-                      return null;
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
                     }}
                   />
-                  <Scatter 
-                    data={confidenceAnalysis} 
-                    fill="#8b5cf6"
-                  />
-                </ScatterChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Factor Analysis */}
-        <Card className="bg-white border border-slate-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-slate-800">
-              <TrendingUp className="w-5 h-5 text-green-600" />
-              Average Factor Analysis
-            </CardTitle>
-            <CardDescription>Key factors influencing student performance</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={factorAnalysis} layout="horizontal">
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis dataKey="factor" type="category" width={100} />
-                  <Tooltip />
-                  <Bar dataKey="avg" fill="#10b981" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                    {scoreDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
-      </div>
 
-      {/* Time Series Analysis */}
-      {timeSeriesData.length > 1 && (
-        <Card className="bg-white border border-slate-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-slate-800">
-              <TrendingUp className="w-5 h-5 text-blue-600" />
-              Prediction Timeline Analysis
+        {/* Risk Analysis Pie Chart */}
+        <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-3 text-xl text-slate-800">
+              <div className="w-8 h-8 bg-rose-100 rounded-lg flex items-center justify-center">
+                <AlertTriangle className="w-4 h-4 text-rose-600" />
+              </div>
+              Risk Assessment
             </CardTitle>
-            <CardDescription>Score and confidence trends over time</CardDescription>
+            <CardDescription className="text-slate-600">
+              Student risk level distribution with intervention priorities
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={timeSeriesData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="index" />
-                  <YAxis yAxisId="left" domain={[0, 20]} />
-                  <YAxis yAxisId="right" orientation="right" domain={[0, 100]} />
-                  <Tooltip />
-                  <Line 
-                    yAxisId="left"
-                    type="monotone" 
-                    dataKey="score" 
-                    stroke="#3b82f6" 
-                    strokeWidth={3}
-                    name="Predicted Score"
-                  />
-                  <Line 
-                    yAxisId="right"
-                    type="monotone" 
-                    dataKey="confidence" 
-                    stroke="#8b5cf6" 
-                    strokeWidth={2}
-                    strokeDasharray="5 5"
-                    name="Confidence %"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+            <div className="h-80 flex items-center">
+              <div className="w-1/2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={riskAnalysis}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={120}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {riskAnalysis.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="w-1/2 space-y-4">
+                {riskAnalysis.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="font-medium text-slate-700">{item.name}</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold text-slate-800">{item.value}</div>
+                      <div className="text-xs text-slate-500">{item.percentage}%</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </CardContent>
         </Card>
-      )}
+      </div>
 
-      {/* Detailed Prediction List */}
-      <Card className="bg-white border border-slate-200">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-slate-800">
-            <Brain className="w-5 h-5 text-blue-600" />
-            Detailed Colab Backend Predictions
+      {/* Timeline Chart */}
+      <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-3 text-xl text-slate-800">
+            <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+              <Activity className="w-4 h-4 text-indigo-600" />
+            </div>
+            Recent Predictions Timeline
           </CardTitle>
-          <CardDescription>Complete list of all backend predictions with interventions</CardDescription>
+          <CardDescription className="text-slate-600">
+            Latest student performance predictions with confidence intervals
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4 max-h-96 overflow-y-auto">
-            {predictions.map((prediction) => (
-              <div key={prediction.id} className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div 
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: getRiskColor(prediction.risk_level) }}
-                    ></div>
-                    <div>
-                      <h4 className="font-semibold text-slate-800">Student {prediction.student_id.slice(-8)}</h4>
-                      <p className="text-sm text-slate-600">
-                        {new Date(prediction.created_at).toLocaleString()}
-                      </p>
-                    </div>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={timelineData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                <XAxis 
+                  dataKey="name" 
+                  tick={{ fontSize: 11, fill: '#64748b' }}
+                  axisLine={{ stroke: '#e2e8f0' }}
+                />
+                <YAxis 
+                  domain={[0, 20]}
+                  tick={{ fontSize: 11, fill: '#64748b' }}
+                  axisLine={{ stroke: '#e2e8f0' }}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '12px',
+                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
+                  }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="score" 
+                  stroke="#3b82f6" 
+                  strokeWidth={3}
+                  dot={{ fill: '#3b82f6', strokeWidth: 2, r: 6 }}
+                  activeDot={{ r: 8, fill: '#1d4ed8' }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="confidence" 
+                  stroke="#10b981" 
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Recent Predictions List */}
+      <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-3 text-xl text-slate-800">
+            <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+              <Users className="w-4 h-4 text-emerald-600" />
+            </div>
+            Latest ML Predictions
+          </CardTitle>
+          <CardDescription className="text-slate-600">
+            Detailed view of recent student performance predictions
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {predictions.slice(0, 5).map((prediction, index) => (
+              <div 
+                key={prediction.id} 
+                className="flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl hover:from-blue-50 hover:to-indigo-50 transition-all duration-300 border border-slate-100"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                    {prediction.students?.name?.charAt(0) || 'S'}
                   </div>
+                  <div>
+                    <h4 className="font-semibold text-slate-800">
+                      {prediction.students?.name || 'Unknown Student'}
+                    </h4>
+                    <p className="text-sm text-slate-600">
+                      Generated {new Date(prediction.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <div className="text-2xl font-bold" style={{ color: getScoreColor(prediction.predicted_score) }}>
+                    <div className="text-2xl font-bold text-slate-800">
                       {prediction.predicted_score}/20
                     </div>
-                    <div className="text-sm text-slate-600">{prediction.confidence_level}% confidence</div>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-                  <div>
-                    <p className="text-xs text-slate-600 mb-1">Academic Progress</p>
-                    <p className="text-sm">G1: {prediction.g1} → G2: {prediction.g2}</p>
-                    <div className="flex items-center gap-1 text-xs">
-                      {prediction.g2 > prediction.g1 ? (
-                        <TrendingUp className="w-3 h-3 text-green-600" />
-                      ) : (
-                        <TrendingDown className="w-3 h-3 text-red-600" />
-                      )}
-                      <span>{prediction.g2 > prediction.g1 ? 'Improving' : 'Declining'}</span>
+                    <div className="text-sm text-slate-500">
+                      {prediction.confidence_level?.toFixed(0)}% confidence
                     </div>
                   </div>
-                  
-                  <div>
-                    <p className="text-xs text-slate-600 mb-1">Risk Assessment</p>
-                    <Badge 
-                      className="text-white"
-                      style={{ backgroundColor: getRiskColor(prediction.risk_level) }}
-                    >
-                      {prediction.risk_level.toUpperCase()} RISK
-                    </Badge>
-                  </div>
-                  
-                  <div>
-                    <p className="text-xs text-slate-600 mb-1">Model Info</p>
-                    <p className="text-sm">{prediction.model_version}</p>
-                    {prediction.backend_source && (
-                      <p className="text-xs text-green-600">✓ {prediction.backend_source}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="bg-white p-3 rounded border border-slate-200">
-                  <p className="text-xs text-slate-600 mb-1 font-medium">Colab Backend Intervention Plan:</p>
-                  <p className="text-sm text-slate-800">{prediction.intervention_summary}</p>
+                  <Badge 
+                    variant={
+                      prediction.risk_level === 'high' ? 'destructive' :
+                      prediction.risk_level === 'medium' ? 'default' : 'secondary'
+                    }
+                    className="capitalize"
+                  >
+                    {prediction.risk_level} Risk
+                  </Badge>
                 </div>
               </div>
             ))}
