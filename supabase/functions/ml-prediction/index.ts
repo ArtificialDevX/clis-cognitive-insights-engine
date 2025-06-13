@@ -48,61 +48,51 @@ serve(async (req) => {
     // Your Colab backend URL - replace with your actual ngrok or Colab URL
     const colabBackendUrl = Deno.env.get('COLAB_BACKEND_URL') || 'https://your-colab-url.ngrok.io';
     
-    let prediction;
+    console.log('Calling Colab backend at:', colabBackendUrl);
     
-    try {
-      // Try to call your Colab backend first
-      console.log('Calling Colab backend at:', colabBackendUrl);
-      
-      const response = await fetch(`${colabBackendUrl}/predict`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          features: [
-            features.age,
-            features.studytime,
-            features.g1,
-            features.g2,
-            features.absences,
-            features.effort_score,
-            features.emotional_sentiment,
-            features.participation_index,
-            features.family_support,
-            features.health_score,
-            features.social_activity,
-            features.alcohol_consumption,
-            features.attendance_rate,
-            features.motivation_level,
-            features.stress_level
-          ]
-        }),
-        signal: AbortSignal.timeout(10000) // 10 second timeout
-      });
+    // Call your Colab backend
+    const response = await fetch(`${colabBackendUrl}/predict`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        features: [
+          features.age,
+          features.studytime,
+          features.g1,
+          features.g2,
+          features.absences,
+          features.effort_score,
+          features.emotional_sentiment,
+          features.participation_index,
+          features.family_support,
+          features.health_score,
+          features.social_activity,
+          features.alcohol_consumption,
+          features.attendance_rate,
+          features.motivation_level,
+          features.stress_level
+        ]
+      }),
+      signal: AbortSignal.timeout(15000) // 15 second timeout
+    });
 
-      if (response.ok) {
-        const colabResult = await response.json();
-        console.log('Colab prediction result:', colabResult);
-        
-        prediction = {
-          predicted_score: colabResult.predicted_score || colabResult.prediction,
-          confidence_level: colabResult.confidence || 85,
-          risk_level: colabResult.risk_level || (colabResult.predicted_score < 10 ? 'high' : colabResult.predicted_score < 14 ? 'medium' : 'low'),
-          intervention_summary: colabResult.intervention || generateFallbackIntervention(colabResult.predicted_score || colabResult.prediction, features),
-          model_version: 'colab-backend-v1.0',
-          backend_source: 'colab'
-        };
-      } else {
-        throw new Error(`Colab backend responded with status: ${response.status}`);
-      }
-    } catch (colabError) {
-      console.log('Colab backend failed, using fallback ML model:', colabError.message);
-      
-      // Fallback to local ML prediction if Colab is unavailable
-      prediction = generateLocalPrediction(features);
-      prediction.backend_source = 'fallback';
+    if (!response.ok) {
+      throw new Error(`Colab backend responded with status: ${response.status}`);
     }
+
+    const colabResult = await response.json();
+    console.log('Colab prediction result:', colabResult);
+    
+    const prediction = {
+      predicted_score: colabResult.predicted_score || colabResult.prediction,
+      confidence_level: colabResult.confidence || 85,
+      risk_level: colabResult.risk_level || (colabResult.predicted_score < 10 ? 'high' : colabResult.predicted_score < 14 ? 'medium' : 'low'),
+      intervention_summary: colabResult.intervention || generateIntervention(colabResult.predicted_score || colabResult.prediction, features),
+      model_version: 'colab-backend-v1.0',
+      backend_source: 'colab'
+    };
 
     // Store prediction in database
     const { data: insertedData, error: insertError } = await supabase
@@ -138,7 +128,7 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         prediction: insertedData,
-        backend_used: prediction.backend_source
+        backend_used: 'colab'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -147,8 +137,9 @@ serve(async (req) => {
     console.error('Error in ml-prediction function:', error);
     return new Response(
       JSON.stringify({ 
-        error: 'Prediction failed', 
-        details: error.message 
+        error: 'Colab backend connection failed', 
+        details: error.message,
+        message: 'Please ensure your Colab backend is running and accessible'
       }),
       { 
         status: 500, 
@@ -158,37 +149,7 @@ serve(async (req) => {
   }
 });
 
-function generateLocalPrediction(features: any) {
-  // Advanced local ML algorithm as fallback
-  const academicWeight = (features.g1 * 0.3 + features.g2 * 0.4);
-  const studyFactor = Math.log(features.studytime + 1) * 2.5;
-  const attendanceFactor = (features.attendance_rate / 100) * 3;
-  const effortFactor = features.effort_score * 0.8;
-  const emotionalFactor = features.emotional_sentiment * 4;
-  const motivationFactor = features.motivation_level * 0.5;
-  const stressPenalty = features.stress_level * -2;
-  
-  let predicted_score = academicWeight + studyFactor + attendanceFactor + 
-                       effortFactor + emotionalFactor + motivationFactor + stressPenalty;
-  
-  predicted_score = Math.max(0, Math.min(20, predicted_score));
-  
-  const confidence_level = Math.min(95, 70 + (features.participation_index * 2));
-  
-  let risk_level = 'low';
-  if (predicted_score < 8) risk_level = 'high';
-  else if (predicted_score < 12) risk_level = 'medium';
-  
-  return {
-    predicted_score: Math.round(predicted_score * 100) / 100,
-    confidence_level: Math.round(confidence_level),
-    risk_level,
-    intervention_summary: generateFallbackIntervention(predicted_score, features),
-    model_version: 'local-fallback-v2.0'
-  };
-}
-
-function generateFallbackIntervention(score: number, features: any): string {
+function generateIntervention(score: number, features: any): string {
   const interventions = [];
   
   if (features.studytime < 3) interventions.push("Increase study time");

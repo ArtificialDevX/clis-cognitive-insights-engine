@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { Brain, Calculator, AlertTriangle, Database, Users } from 'lucide-react';
+import { Brain, Calculator, AlertTriangle, Database, Users, Wifi } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Student {
@@ -125,9 +126,9 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
   const handlePredict = async () => {
     setLoading(true);
     try {
-      console.log('Starting REAL backend prediction...');
+      console.log('Starting Colab backend prediction...');
       
-      // Call the real backend edge function
+      // Call the Colab backend via edge function
       const { data, error } = await supabase.functions.invoke('ml-prediction', {
         body: {
           student_id: selectedStudentId || 'custom_analytics',
@@ -136,28 +137,28 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
       });
 
       if (error) {
-        console.error('Backend prediction error:', error);
+        console.error('Colab backend prediction error:', error);
         throw error;
       }
 
-      console.log('Real backend prediction result:', data);
+      console.log('Colab backend prediction result:', data);
 
       if (data.success) {
         setPrediction(data.prediction);
         onPredictionComplete();
         
         toast({
-          title: "Real Backend Prediction Generated",
-          description: `Backend: ${data.backend_used} | Score: ${data.prediction.predicted_score}/20 | Risk: ${data.prediction.risk_level}`,
+          title: "✅ Colab Backend Prediction Complete",
+          description: `Score: ${data.prediction.predicted_score}/20 | Risk: ${data.prediction.risk_level} | Confidence: ${data.prediction.confidence_level}%`,
         });
       } else {
-        throw new Error(data.error || 'Prediction failed');
+        throw new Error(data.error || 'Colab backend prediction failed');
       }
     } catch (error) {
-      console.error('Error generating real prediction:', error);
+      console.error('Error generating Colab prediction:', error);
       toast({
-        title: "Error",
-        description: "Failed to generate prediction. Please try again.",
+        title: "❌ Colab Backend Error",
+        description: "Failed to connect to your Colab backend. Please ensure it's running and accessible.",
         variant: "destructive",
       });
     } finally {
@@ -178,13 +179,13 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
     <Card className="bg-white border-2 border-slate-200 shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-slate-900">
-          <Brain className="w-5 h-5 text-blue-600" />
-          <Database className="w-5 h-5 text-green-600" />
-          <Users className="w-5 h-5 text-purple-600" />
-          Real Backend ML Prediction System
+          <Wifi className="w-5 h-5 text-blue-600" />
+          <Brain className="w-5 h-5 text-green-600" />
+          <Database className="w-5 h-5 text-purple-600" />
+          Real Colab Backend ML Predictions
         </CardTitle>
         <CardDescription className="text-slate-700">
-          Advanced ML prediction using real backend integration with Colab ({students.length} students available)
+          Direct integration with your Colab ML backend ({students.length} students available)
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -430,45 +431,49 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
         >
           {loading ? (
             <>
-              <Brain className="w-4 h-4 mr-2 animate-spin" />
-              Generating Real Backend Prediction...
+              <Wifi className="w-4 h-4 mr-2 animate-pulse" />
+              Connecting to Colab Backend...
             </>
           ) : (
             <>
+              <Wifi className="w-4 h-4 mr-2" />
               <Brain className="w-4 h-4 mr-2" />
-              <Database className="w-4 h-4 mr-2" />
-              Generate Real ML Prediction
+              Generate Colab ML Prediction
             </>
           )}
         </Button>
 
         {prediction && (
-          <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
-            <h4 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4" />
-              <Database className="w-4 h-4" />
-              Real Backend Prediction Results
+          <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+            <h4 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
+              <Wifi className="w-4 h-4" />
+              <Brain className="w-4 h-4" />
+              Real Colab Backend Results
             </h4>
             <div className="grid grid-cols-2 gap-3 text-sm mb-3">
-              <div className="bg-white p-2 rounded border border-slate-200">
-                <strong className="text-slate-900">Predicted Score:</strong> 
+              <div className="bg-white p-2 rounded border border-green-200">
+                <strong className="text-green-900">Predicted Score:</strong> 
                 <span className="text-lg font-bold ml-2 text-green-700">{prediction.predicted_score}/20</span>
               </div>
-              <div className="bg-white p-2 rounded border border-slate-200">
-                <strong className="text-slate-900">Confidence:</strong> 
+              <div className="bg-white p-2 rounded border border-green-200">
+                <strong className="text-green-900">Confidence:</strong> 
                 <span className="text-lg font-bold ml-2 text-blue-700">{prediction.confidence_level}%</span>
               </div>
-              <div className="col-span-2 bg-white p-2 rounded border border-slate-200">
-                <strong className="text-slate-900">Risk Level:</strong>
+              <div className="col-span-2 bg-white p-2 rounded border border-green-200">
+                <strong className="text-green-900">Risk Level:</strong>
                 <span className={`ml-2 px-3 py-1 rounded-full text-xs font-bold ${getRiskColor(prediction.risk_level)}`}>
                   {prediction.risk_level.toUpperCase()}
                 </span>
               </div>
             </div>
             
-            <div className="bg-white p-3 rounded border border-slate-200">
-              <strong className="text-sm text-slate-900">Intervention Plan:</strong>
-              <p className="text-slate-700 mt-2 text-sm leading-relaxed">{prediction.intervention_summary}</p>
+            <div className="bg-white p-3 rounded border border-green-200">
+              <strong className="text-sm text-green-900">Colab Intervention Plan:</strong>
+              <p className="text-green-800 mt-2 text-sm leading-relaxed">{prediction.intervention_summary}</p>
+            </div>
+            
+            <div className="mt-2 text-xs text-green-600 font-medium">
+              ✅ Prediction generated by your Colab backend
             </div>
           </div>
         )}
