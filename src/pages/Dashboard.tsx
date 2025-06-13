@@ -299,6 +299,15 @@ const Dashboard = () => {
           />
         </div>
 
+        {/* Comprehensive Visualizations */}
+        <div className="grid grid-cols-1 gap-6">
+          <PredictionVisualization predictions={predictions} />
+        </div>
+
+        <div className="grid grid-cols-1 gap-6">
+          <ColabMetricsDashboard predictions={predictions} />
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Student Metrics */}
           <StudentMetrics predictions={predictions} />
