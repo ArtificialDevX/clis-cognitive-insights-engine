@@ -213,7 +213,7 @@ const Dashboard = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <Brain className="w-12 h-12 mx-auto mb-4 text-slate-700 animate-pulse" />
+          <Brain className="w-12 h-12 mx-auto mb-4 text-blue-600 animate-pulse" />
           <p className="text-lg text-slate-900">Loading CLIS Dashboard...</p>
           <p className="text-sm text-slate-600 mt-2">Connecting to Supabase database...</p>
         </div>
@@ -234,7 +234,7 @@ const Dashboard = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <Brain className="w-12 h-12 text-slate-700 mr-3" />
+            <Brain className="w-12 h-12 text-blue-600 mr-3" />
             <h1 className="text-4xl font-bold text-slate-900">
               CLIS Dashboard
             </h1>
@@ -273,10 +273,10 @@ const Dashboard = () => {
           <Card className="bg-white border-2 border-slate-200 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-slate-700">Active Alerts</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              <AlertTriangle className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-amber-600">{activeAlerts}</div>
+              <div className="text-2xl font-bold text-blue-600">{activeAlerts}</div>
             </CardContent>
           </Card>
 

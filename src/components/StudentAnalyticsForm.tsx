@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Brain, Calculator, AlertTriangle, Database, Users } from 'lucide-react';
@@ -123,253 +122,39 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Advanced ML prediction with real database integration
-  const enhancedMLPrediction = (data: typeof formData, studentData?: Student): PredictionResult => {
-    console.log('🧠 Running ML prediction with database integration:', { formData: data, realStudentData: studentData });
-    
-    let academicBase = 0;
-    let demographicFactors = 0;
-    let familyFactors = 0;
-    let socialFactors = 0;
-    let realDataBonus = 0;
-    
-    if (studentData && useRealData) {
-      console.log('✅ Using real student database record:', studentData);
-      
-      // Real academic history
-      const g1Score = parseFloat(studentData.G1 || '0') || 0;
-      const g2Score = studentData.G2 || 0;
-      const g3Score = studentData.G3 || 0;
-      
-      academicBase = (g1Score * 0.25 + g2Score * 0.35 + (g3Score || g2Score) * 0.20);
-      console.log('📊 Real academic base score:', academicBase);
-      
-      // Demographics
-      if (studentData.age && studentData.age >= 15 && studentData.age <= 18) {
-        demographicFactors += 1.5;
-      }
-      
-      // Family factors
-      const parentEdu = ((studentData.Fedu || 0) + (studentData.Medu || 0)) / 2;
-      familyFactors += parentEdu * 0.6;
-      familyFactors += (studentData.famrel || 0) * 0.4;
-      familyFactors += (studentData.health || 0) * 0.3;
-      
-      // Social factors
-      const socialBalance = Math.max(0, 5 - Math.abs((studentData.goout || 0) - 3)) * 0.4;
-      socialFactors += socialBalance;
-      
-      // Alcohol impact
-      const alcoholImpact = -((studentData.Dalc || 0) + (studentData.Walc || 0)) * 0.15;
-      socialFactors += alcoholImpact;
-      
-      realDataBonus = 2.0;
-      
-      console.log('🏠 Family factors:', familyFactors);
-      console.log('👥 Social factors:', socialFactors);
-      console.log('🎯 Real data bonus:', realDataBonus);
-    }
-    
-    // Enhanced scoring
-    const academicWeight = academicBase + (data.g1 * 0.15 + data.g2 * 0.20);
-    const studyEffort = Math.log(data.studytime + 1) * 3.0;
-    const attendanceImpact = (data.attendance_rate / 100) * 4.0;
-    const emotionalFactor = data.emotional_sentiment * 6;
-    const effortBonus = Math.pow(data.effort_score / 10, 1.5) * 5;
-    const participationBonus = data.participation_index * 0.6;
-    const motivationImpact = data.motivation_level * 0.4;
-    const stressImpact = -(data.stress_level * 3);
-    
-    let predicted_score = academicWeight + studyEffort + attendanceImpact + 
-                         emotionalFactor + effortBonus + participationBonus + 
-                         demographicFactors + familyFactors + socialFactors + 
-                         realDataBonus + motivationImpact + stressImpact;
-    
-    // Trend analysis
-    if (data.g2 > data.g1) {
-      predicted_score += 2.0;
-    } else if (data.g2 < data.g1) {
-      predicted_score -= 1.5;
-    }
-    
-    // Emotion-effort synergy
-    const emotionEffortSynergy = data.emotional_sentiment * data.effort_score * 0.4;
-    predicted_score += emotionEffortSynergy;
-    
-    // Normalize to 0-20 scale
-    predicted_score = Math.max(2, Math.min(20, predicted_score));
-    
-    console.log('🎯 Final predicted score:', predicted_score);
-    
-    // Confidence calculation
-    const variance_factors = [
-      Math.abs(data.g2 - data.g1),
-      data.absences / 5,
-      Math.abs(data.emotional_sentiment - 0.5) * 2,
-      Math.abs(data.effort_score - 7.5) / 7.5,
-      useRealData && studentData ? 0 : 4
-    ];
-    
-    const avg_variance = variance_factors.reduce((a, b) => a + b, 0) / variance_factors.length;
-    const base_confidence = useRealData && studentData ? 95 : 80;
-    const confidence_level = Math.min(99, base_confidence - (avg_variance * 6) + (data.participation_index * 1.2));
-    
-    // Risk assessment
-    let risk_level = 'low';
-    if (predicted_score < 8) risk_level = 'high';
-    else if (predicted_score < 12) risk_level = 'medium';
-    else if (data.absences > 8) risk_level = 'medium';
-    else if (data.emotional_sentiment < 0.3) risk_level = 'medium';
-    else if (studentData?.G2 && studentData.G2 < 10) risk_level = 'medium';
-    else if (studentData && (studentData.Dalc || 0) + (studentData.Walc || 0) > 6) risk_level = 'medium';
-
-    const intervention_summary = generateIntervention(data, predicted_score, risk_level, studentData, useRealData);
-
-    const shap_explanation = {
-      features: {
-        real_academic_history: academicBase,
-        real_family_factors: familyFactors,
-        real_social_factors: socialFactors,
-        real_demographic_bonus: demographicFactors,
-        real_data_confidence_bonus: realDataBonus,
-        current_performance: data.g1 * 0.15 + data.g2 * 0.20,
-        study_effort: studyEffort,
-        attendance: attendanceImpact,
-        emotional_state: emotionalFactor,
-        effort_level: effortBonus,
-        participation: participationBonus,
-        motivation: motivationImpact,
-        stress_impact: stressImpact,
-        improvement_trend: data.g2 > data.g1 ? 2.0 : (data.g2 < data.g1 ? -1.5 : 0),
-        synergy_bonus: emotionEffortSynergy
-      },
-      total_contribution: predicted_score
-    };
-
-    return {
-      predicted_score: Math.round(predicted_score * 100) / 100,
-      confidence_level: Math.round(confidence_level * 100) / 100,
-      risk_level,
-      intervention_summary,
-      shap_explanation
-    };
-  };
-
-  const generateIntervention = (data: typeof formData, score: number, risk: string, studentData?: Student, isRealData: boolean = false): string => {
-    const interventions = [];
-    const strengths = [];
-    
-    if (studentData && isRealData) {
-      interventions.push("🎯 Analysis based on your Supabase database record");
-      
-      if (studentData.G3 && studentData.G3 > 15) {
-        strengths.push("Strong historical performance in database");
-      }
-      
-      if (studentData.famrel && studentData.famrel >= 4) {
-        strengths.push("Good family support (from database)");
-      }
-      
-      if (studentData.health && studentData.health < 3) {
-        interventions.push("🏥 Address health concerns from student record");
-      }
-      
-      if (studentData.Fedu && studentData.Medu && (studentData.Fedu + studentData.Medu) < 4) {
-        interventions.push("👨‍👩‍👧‍👦 Additional academic support needed based on family education background");
-      }
-    }
-    
-    if (data.studytime < 3) {
-      interventions.push("📚 Implement structured study schedule");
-    }
-    
-    if (data.attendance_rate < 80) {
-      interventions.push("🏫 Critical: Address attendance issues immediately");
-    }
-    
-    if (data.effort_score < 6) {
-      interventions.push("💪 Motivational coaching needed");
-    }
-    
-    if (data.emotional_sentiment < 0.4) {
-      interventions.push("🧠 Emotional support required");
-    }
-
-    let summary = "";
-    if (isRealData && studentData) {
-      summary += "🎯 ANALYSIS BASED ON YOUR SUPABASE DATABASE. ";
-    }
-    
-    if (strengths.length > 0) {
-      summary += `Strengths: ${strengths.join(", ")}. `;
-    }
-    
-    if (interventions.length === 0) {
-      summary += "Student performing excellently across all metrics.";
-    } else {
-      summary += `Recommended: ${interventions.join("; ")}.`;
-    }
-    
-    return summary;
-  };
-
   const handlePredict = async () => {
     setLoading(true);
     try {
-      console.log('🚀 Starting prediction with database integration...');
+      console.log('Starting REAL backend prediction...');
       
-      const predictionResult = enhancedMLPrediction(formData, selectedStudent);
-      
-      console.log('💾 Storing prediction in database...');
-      
-      const { data: insertedData, error } = await supabase
-        .from('predictions')
-        .insert({
+      // Call the real backend edge function
+      const { data, error } = await supabase.functions.invoke('ml-prediction', {
+        body: {
           student_id: selectedStudentId || 'custom_analytics',
-          ...formData,
-          ...predictionResult,
-          model_version: 'v7.0-database-integrated'
-        })
-        .select()
-        .single();
+          features: formData
+        }
+      });
 
       if (error) {
-        console.error('❌ Database error:', error);
+        console.error('Backend prediction error:', error);
         throw error;
       }
 
-      console.log('✅ Prediction stored successfully:', insertedData);
+      console.log('Real backend prediction result:', data);
 
-      // Create alerts for high/medium risk
-      if (predictionResult.risk_level === 'high') {
-        await supabase
-          .from('alerts')
-          .insert({
-            student_id: selectedStudentId || 'custom_analytics',
-            alert_type: 'database_performance_risk',
-            severity: 'high',
-            message: `🚨 CRITICAL: ${useRealData ? 'Database student ID: ' + selectedStudentId : 'Custom analytics'} predicted score ${predictionResult.predicted_score}/20 (${predictionResult.confidence_level}% confidence). ${predictionResult.intervention_summary}`
-          });
-      } else if (predictionResult.risk_level === 'medium') {
-        await supabase
-          .from('alerts')
-          .insert({
-            student_id: selectedStudentId || 'custom_analytics',
-            alert_type: 'database_performance_watch',
-            severity: 'medium',
-            message: `⚠️ MONITOR: ${useRealData ? 'Database student ID: ' + selectedStudentId : 'Custom analytics'} predicted score ${predictionResult.predicted_score}/20. ${predictionResult.intervention_summary}`
-          });
+      if (data.success) {
+        setPrediction(data.prediction);
+        onPredictionComplete();
+        
+        toast({
+          title: "Real Backend Prediction Generated",
+          description: `Backend: ${data.backend_used} | Score: ${data.prediction.predicted_score}/20 | Risk: ${data.prediction.risk_level}`,
+        });
+      } else {
+        throw new Error(data.error || 'Prediction failed');
       }
-
-      setPrediction(predictionResult);
-      onPredictionComplete();
-      
-      toast({
-        title: "🎯 Database-Integrated Prediction Generated",
-        description: `${useRealData ? 'Real Student ' + selectedStudentId : 'Custom Analytics'}: ${predictionResult.predicted_score}/20 | Risk: ${predictionResult.risk_level} | Confidence: ${predictionResult.confidence_level}%`,
-      });
     } catch (error) {
-      console.error('❌ Error generating prediction:', error);
+      console.error('Error generating real prediction:', error);
       toast({
         title: "Error",
         description: "Failed to generate prediction. Please try again.",
@@ -390,16 +175,16 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
   };
 
   return (
-    <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg">
+    <Card className="bg-white border-2 border-slate-200 shadow-sm">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-slate-900">
           <Brain className="w-5 h-5 text-blue-600" />
           <Database className="w-5 h-5 text-green-600" />
           <Users className="w-5 h-5 text-purple-600" />
-          🎯 Student Analytics with Database Integration
+          Real Backend ML Prediction System
         </CardTitle>
-        <CardDescription>
-          Advanced ML prediction system using your Supabase student database ({students.length} students available)
+        <CardDescription className="text-slate-700">
+          Advanced ML prediction using real backend integration with Colab ({students.length} students available)
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -641,65 +426,49 @@ const StudentAnalyticsForm = ({ students, onPredictionComplete }: StudentAnalyti
         <Button 
           onClick={handlePredict} 
           disabled={loading}
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
         >
           {loading ? (
             <>
               <Brain className="w-4 h-4 mr-2 animate-spin" />
-              🔮 Generating Database-Integrated Prediction...
+              Generating Real Backend Prediction...
             </>
           ) : (
             <>
               <Brain className="w-4 h-4 mr-2" />
               <Database className="w-4 h-4 mr-2" />
-              🚀 Generate AI Prediction with Database Integration
+              Generate Real ML Prediction
             </>
           )}
         </Button>
 
         {prediction && (
-          <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
-            <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
+          <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <h4 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
               <AlertTriangle className="w-4 h-4" />
               <Database className="w-4 h-4" />
-              🎯 Database-Integrated Prediction Results
+              Real Backend Prediction Results
             </h4>
             <div className="grid grid-cols-2 gap-3 text-sm mb-3">
-              <div className="bg-white/70 p-2 rounded border">
-                <strong>Predicted Score:</strong> 
+              <div className="bg-white p-2 rounded border border-slate-200">
+                <strong className="text-slate-900">Predicted Score:</strong> 
                 <span className="text-lg font-bold ml-2 text-green-700">{prediction.predicted_score}/20</span>
               </div>
-              <div className="bg-white/70 p-2 rounded border">
-                <strong>Confidence:</strong> 
+              <div className="bg-white p-2 rounded border border-slate-200">
+                <strong className="text-slate-900">Confidence:</strong> 
                 <span className="text-lg font-bold ml-2 text-blue-700">{prediction.confidence_level}%</span>
               </div>
-              <div className="col-span-2 bg-white/70 p-2 rounded border">
-                <strong>Risk Level:</strong>
+              <div className="col-span-2 bg-white p-2 rounded border border-slate-200">
+                <strong className="text-slate-900">Risk Level:</strong>
                 <span className={`ml-2 px-3 py-1 rounded-full text-xs font-bold ${getRiskColor(prediction.risk_level)}`}>
                   {prediction.risk_level.toUpperCase()}
                 </span>
               </div>
             </div>
             
-            {prediction.shap_explanation && (
-              <div className="mb-3 bg-white/70 p-3 rounded border">
-                <strong className="text-sm">🔍 Feature Analysis:</strong>
-                <div className="grid grid-cols-2 gap-1 text-xs mt-2">
-                  {Object.entries(prediction.shap_explanation.features).map(([feature, value]) => (
-                    <div key={feature} className="flex justify-between">
-                      <span className={feature.includes('real_') ? 'text-green-700 font-medium' : ''}>
-                        {feature.replace('_', ' ')}:
-                      </span>
-                      <span className="font-mono">{Number(value).toFixed(2)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            <div className="bg-white/70 p-3 rounded border">
-              <strong className="text-sm">📋 Intervention Plan:</strong>
-              <p className="text-gray-700 mt-2 text-sm leading-relaxed">{prediction.intervention_summary}</p>
+            <div className="bg-white p-3 rounded border border-slate-200">
+              <strong className="text-sm text-slate-900">Intervention Plan:</strong>
+              <p className="text-slate-700 mt-2 text-sm leading-relaxed">{prediction.intervention_summary}</p>
             </div>
           </div>
         )}
