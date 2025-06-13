@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +7,8 @@ import StudentMetrics from '@/components/StudentMetrics';
 import AlertsPanel from '@/components/AlertsPanel';
 import PredictionHistory from '@/components/PredictionHistory';
 import StudentAnalyticsForm from '@/components/StudentAnalyticsForm';
+import PredictionVisualization from '@/components/PredictionVisualization';
+import ColabMetricsDashboard from '@/components/ColabMetricsDashboard';
 
 interface Student {
   id: number;

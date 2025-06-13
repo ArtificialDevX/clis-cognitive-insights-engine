@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, ScatterPlot, Scatter } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, ScatterChart, Scatter } from 'recharts';
 import { Brain, TrendingUp, TrendingDown, AlertTriangle, Target, Zap, Activity, BarChart3 } from 'lucide-react';
 
 interface Prediction {
@@ -269,7 +268,7 @@ const PredictionVisualization = ({ predictions }: PredictionVisualizationProps) 
           <CardContent>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <ScatterPlot>
+                <ScatterChart>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
                     type="number" 
@@ -303,7 +302,7 @@ const PredictionVisualization = ({ predictions }: PredictionVisualizationProps) 
                     data={confidenceAnalysis} 
                     fill="#8b5cf6"
                   />
-                </ScatterPlot>
+                </ScatterChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
